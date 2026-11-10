@@ -135,4 +135,13 @@ return [
 
     // Footer
     'rights' => 'جميع الحقوق محفوظة.',
+    'crafted_by' => 'تطوير',
+    'crafted_by_team' => 'قسم التحول الرقمي',
+
+    // ERP navigation
+    'nav' => [
+        'main' => 'الرئيسية',
+        'branch' => 'الفرع',
+        'all_my_branches' => 'كل فروعي',
+    ],
 ];

@@ -1,0 +1,160 @@
+<?php
+
+return [
+    'title' => 'Settings',
+
+    'tabs' => [
+        'general' => 'Site settings',
+        'appearance' => 'Appearance',
+        'mail' => 'Email',
+        'security' => 'Security',
+        'maintenance' => 'Backup & maintenance',
+    ],
+
+    'backup' => [
+        'title' => 'Backups',
+        'hint' => 'Each backup is a ZIP file with the database and all uploaded files (logos and documents).',
+        'create' => 'Back up now',
+        'file' => 'File',
+        'type' => 'Type',
+        'types' => ['manual' => 'Manual', 'auto' => 'Automatic'],
+        'size' => 'Size',
+        'date' => 'Date',
+        'download' => 'Download',
+        'empty' => 'No backups yet.',
+        'created' => 'Backup :file was created.',
+        'deleted' => 'Backup deleted.',
+        'failed' => 'Backup failed: :error',
+        'auto_title' => 'Automatic backup',
+        'auto_enabled' => 'Create a backup automatically every day',
+        'auto_hint' => 'Requires the task scheduler on the server (php artisan schedule:work or a scheduled task every minute).',
+        'hour' => 'Daily backup time',
+        'keep' => 'Backups to keep',
+        'copies' => 'copies',
+        'keep_hint' => 'Older backups are deleted automatically after each new one.',
+    ],
+
+    'retention' => [
+        'title' => 'Old records cleanup',
+        'audit_retention_days' => 'Keep audit log for',
+        'login_attempts_retention_days' => 'Keep login attempts for',
+        'days' => 'days',
+        'hint' => 'Records older than this are deleted daily. Enter 0 to keep them forever.',
+    ],
+
+    'maintenance' => [
+        'title' => 'Maintenance mode',
+        'enabled' => 'Enable maintenance mode',
+        'hint' => 'Blocks all users from the system except those who can edit settings.',
+        'maintenance_message_ar' => 'Maintenance message (Arabic)',
+        'maintenance_message_en' => 'Maintenance message (English)',
+        'active_banner' => 'Maintenance mode is on: other users cannot use the system right now.',
+    ],
+
+    'general' => [
+        'site_name' => 'System name',
+        'site_name_hint' => 'Shown in page titles, the footer and the login page.',
+        'site_name_ar' => 'Arabic name',
+        'site_name_en' => 'English name',
+        'images' => 'Logos',
+        'images_hint' => 'Allowed: PNG, JPG or WEBP up to 1 MB. Favicon: ICO or PNG up to 512 KB.',
+        'current' => 'Current',
+        'default' => 'Default',
+        'remove' => 'Restore default',
+        'logo_dark' => 'Logo for light backgrounds',
+        'logo_dark_hint' => 'Shown in the top bar and on the login page.',
+        'logo_light' => 'Logo for dark backgrounds',
+        'logo_light_hint' => 'Shown in dark mode and the dark sidebar.',
+        'logo_sm' => 'Small logo',
+        'logo_sm_hint' => 'Shown when the sidebar is collapsed. Square works best.',
+        'favicon' => 'Browser icon',
+        'favicon_hint' => 'Shown in the browser tab.',
+    ],
+
+    'appearance' => [
+        'hint' => 'Applies to the panel for all users. Each user can still switch to dark mode from the settings icon in the top bar.',
+        'primary_color' => 'Primary color',
+        'primary_color_hint' => 'Color of main buttons, links, the active menu item and tabs.',
+        'preview' => 'Preview',
+        'sample_button' => 'Main button',
+        'sample_outline' => 'Secondary',
+        'sample_badge' => 'Badge',
+        'sample_link' => 'Link',
+        'theme_mode' => 'Default mode',
+        'sidebar_color' => 'Sidebar color',
+        'topbar_color' => 'Top bar color',
+        'sidebar_size' => 'Sidebar size',
+        'layout_width' => 'Page width',
+        'button_shape' => 'Button shape',
+        'options' => [
+            'theme_mode' => ['light' => 'Light', 'dark' => 'Dark'],
+            'sidebar_color' => ['dark' => 'Dark', 'light' => 'Light'],
+            'topbar_color' => ['light' => 'Light', 'dark' => 'Dark'],
+            'sidebar_size' => ['default' => 'Default', 'compact' => 'Compact', 'icon' => 'Icons only'],
+            'layout_width' => ['fluid' => 'Full width', 'boxed' => 'Boxed'],
+            'button_shape' => ['default' => 'Default', 'rounded' => 'Rounded', 'square' => 'Square'],
+        ],
+        'reset' => 'Restore default appearance',
+        'reset_confirm' => 'Color, menu and buttons will return to the original settings.',
+        'reset_done' => 'Default appearance restored.',
+    ],
+
+    'mail' => [
+        'hint' => 'Used to send two-factor codes and password reset links.',
+        'mailer' => 'Sending method',
+        'mailers' => [
+            'smtp' => 'SMTP (real sending)',
+            'log' => 'System log only (no sending)',
+        ],
+        'log_warning' => 'Mail is currently written to the system log: messages do not reach users and are saved in storage/logs/laravel.log.',
+        'host' => 'SMTP host',
+        'port' => 'Port',
+        'encryption' => 'Encryption',
+        'encryptions' => [
+            'none' => 'None',
+            'tls' => 'TLS (port 587)',
+            'ssl' => 'SSL (port 465)',
+        ],
+        'username' => 'Username',
+        'password' => 'Password',
+        'password_saved' => 'A password is saved. Leave empty to keep it.',
+        'from_address' => 'Sender email',
+        'from_name' => 'Sender name',
+        'test' => 'Send test email',
+        'test_hint' => 'Sent to your email (:email) using the saved settings. Save your changes first.',
+        'test_subject' => 'Test email from :app',
+        'test_line' => 'Your email settings are working.',
+        'test_sent' => 'A test email was sent to :email.',
+        'test_failed' => 'Sending failed: :error',
+    ],
+
+    'security' => [
+        'hint' => 'Changes apply immediately to all users.',
+        'minutes' => 'minutes',
+        'attempts' => 'attempts',
+        'range' => 'From :min to :max',
+    ],
+
+    'fields' => [
+        'session_timeout_minutes' => [
+            'label' => 'Idle time before logout',
+            'help' => 'Users are logged out automatically after this much inactivity.',
+        ],
+        'login_max_attempts' => [
+            'label' => 'Failed login attempts before lockout',
+            'help' => 'After this many failures, login is locked for the same email and device.',
+        ],
+        'login_lockout_minutes' => [
+            'label' => 'Lockout duration',
+            'help' => 'How long login stays locked after too many failures.',
+        ],
+        'two_factor_code_minutes' => [
+            'label' => 'Two-factor code validity',
+            'help' => 'How long the emailed login code stays valid.',
+        ],
+    ],
+
+    'flash' => [
+        'updated' => 'Settings saved.',
+    ],
+];
