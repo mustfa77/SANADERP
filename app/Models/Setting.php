@@ -39,6 +39,21 @@ class Setting extends Model
         'login_attempts_retention_days' => ['default' => 90, 'min' => 0, 'max' => 3650],
     ];
 
+    /**
+     * Alert periods and document upload limit (Settings > Alerts).
+     *
+     * @var array<string, array{default: int, min: int, max: int}>
+     */
+    public const ALERTS = [
+        'days_before_contract_end' => ['default' => 7, 'min' => 1, 'max' => 90],
+        'days_before_probation_end' => ['default' => 3, 'min' => 1, 'max' => 90],
+        'days_before_iqama_expiry' => ['default' => 30, 'min' => 1, 'max' => 365],
+        'days_before_passport_expiry' => ['default' => 180, 'min' => 1, 'max' => 730],
+        'days_before_medical_expiry' => ['default' => 30, 'min' => 1, 'max' => 365],
+        'hold_duration_hours' => ['default' => 48, 'min' => 1, 'max' => 720],
+        'document_max_upload_mb' => ['default' => 10, 'min' => 1, 'max' => 50],
+    ];
+
     public static function get(string $key, mixed $default = null): mixed
     {
         $all = Cache::rememberForever(self::CACHE_KEY, fn (): array => static::query()->pluck('value', 'key')->all());
@@ -51,7 +66,7 @@ class Setting extends Model
      */
     public static function integer(string $key): int
     {
-        $definitions = self::SECURITY + self::MAINTENANCE;
+        $definitions = self::SECURITY + self::MAINTENANCE + self::ALERTS;
 
         return (int) static::get($key, $definitions[$key]['default'] ?? 0);
     }

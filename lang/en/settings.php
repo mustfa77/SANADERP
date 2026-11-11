@@ -9,6 +9,21 @@ return [
         'mail' => 'Email',
         'security' => 'Security',
         'maintenance' => 'Backup & maintenance',
+        'alerts' => 'Alerts & documents',
+    ],
+
+    'alerts' => [
+        'hint' => 'When each alert appears in the system, and the maximum document file size.',
+        'units' => ['days' => 'days', 'hours' => 'hours', 'mb' => 'MB'],
+        'fields' => [
+            'days_before_contract_end' => ['label' => 'Before a rental contract ends', 'help' => 'Alert this long before the contract ends.'],
+            'days_before_probation_end' => ['label' => 'Before probation ends', 'help' => 'Alert before the worker\'s probation period ends.'],
+            'days_before_iqama_expiry' => ['label' => 'Before iqama expiry', 'help' => 'Alert to renew the worker\'s iqama.'],
+            'days_before_passport_expiry' => ['label' => 'Before passport expiry', 'help' => 'Alert to renew the worker\'s passport.'],
+            'days_before_medical_expiry' => ['label' => 'Before medical check expiry', 'help' => 'Alert to redo the medical check.'],
+            'hold_duration_hours' => ['label' => 'Worker hold duration', 'help' => 'A worker held for a client is released automatically after this time.'],
+            'document_max_upload_mb' => ['label' => 'Maximum document size', 'help' => 'Per uploaded file (PDF or image).'],
+        ],
     ],
 
     'backup' => [

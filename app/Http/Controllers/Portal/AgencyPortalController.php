@@ -27,8 +27,8 @@ class AgencyPortalController extends Controller
     public function documents(Request $request): View
     {
         $documents = Document::query()
-            ->with('candidate')
-            ->where('agency_id', $request->user()->agency_id)
+            ->with(['documentable', 'type'])
+            ->whereHasMorph('documentable', [Candidate::class], fn ($query) => $query->where('agency_id', $request->user()->agency_id))
             ->latest()
             ->paginate(20);
 

@@ -20,8 +20,6 @@ return [
         ['key' => 'recruitment', 'icon' => 'ri-flight-takeoff-line', 'route' => null, 'permission' => 'recruitment.view'],
         ['key' => 'candidates', 'icon' => 'ri-user-search-line', 'route' => null, 'permission' => 'candidates.view'],
         ['key' => 'documents', 'icon' => 'ri-file-list-3-line', 'route' => null, 'permission' => 'documents.view'],
-        ['key' => 'agencies', 'icon' => 'ri-building-2-line', 'route' => null, 'permission' => 'agencies.view'],
-        ['key' => 'authorities', 'icon' => 'ri-government-line', 'route' => null, 'permission' => 'authorities.view'],
         ['key' => 'website_requests', 'icon' => 'ri-global-line', 'route' => null, 'permission' => 'website_requests.view'],
     ],
     'rental' => [
@@ -31,7 +29,6 @@ return [
     ],
     'operations' => [
         ['key' => 'workers', 'icon' => 'ri-team-line', 'route' => null, 'permission' => 'workers.view'],
-        ['key' => 'camps', 'icon' => 'ri-home-4-line', 'route' => null, 'permission' => 'camps.view'],
         ['key' => 'camp_movements', 'icon' => 'ri-arrow-left-right-line', 'route' => null, 'permission' => 'camp_movements.view'],
         ['key' => 'drivers', 'icon' => 'ri-steering-2-line', 'route' => null, 'permission' => 'drivers.view'],
         ['key' => 'trips', 'icon' => 'ri-bus-line', 'route' => null, 'permission' => 'trips.view'],
@@ -49,6 +46,22 @@ return [
         ['key' => 'users', 'icon' => 'ri-user-settings-line', 'route' => 'admin.users.index', 'permission' => 'users.view'],
         ['key' => 'roles', 'icon' => 'ri-shield-keyhole-line', 'route' => 'admin.roles.index', 'permission' => 'roles.view'],
         ['key' => 'audit_log', 'icon' => 'ri-history-line', 'route' => 'admin.audit-logs.index', 'permission' => 'audit_log.view'],
-        ['key' => 'settings', 'icon' => 'ri-settings-3-line', 'route' => 'admin.settings.edit', 'permission' => 'settings.view'],
+        [
+            'key' => 'settings', 'icon' => 'ri-settings-3-line', 'route' => null, 'permission' => null,
+            'children' => [
+                ['key' => 'system_settings', 'route' => 'admin.settings.edit', 'permission' => 'settings.view'],
+                ['key' => 'alert_settings', 'route' => 'admin.settings.edit', 'params' => ['tab' => 'alerts'], 'permission' => 'settings.view'],
+                ['key' => 'countries', 'route' => 'admin.reference.countries.index', 'permission' => 'settings.view', 'active' => 'admin.countries.*'],
+                ['key' => 'document_types', 'route' => 'admin.document-types.index', 'permission' => 'settings.view'],
+                ['key' => 'completed_visa_lists', 'route' => 'admin.reference.completed_visa_lists.index', 'permission' => 'settings.view'],
+                ['key' => 'agencies', 'route' => 'admin.reference.agencies.index', 'permission' => 'agencies.view'],
+                ['key' => 'authorities', 'route' => 'admin.reference.authorities.index', 'permission' => 'authorities.view'],
+                ['key' => 'camps', 'route' => 'admin.reference.camps.index', 'permission' => 'camps.view'],
+                ['key' => 'professions', 'route' => 'admin.reference.professions.index', 'permission' => 'settings.view'],
+                ['key' => 'shifts', 'route' => 'admin.reference.shifts.index', 'permission' => 'settings.view'],
+                ['key' => 'prices', 'route' => 'admin.reference.prices.index', 'permission' => 'settings.view'],
+                ['key' => 'lookups', 'route' => 'admin.reference.lookups.index', 'permission' => 'settings.view'],
+            ],
+        ],
     ],
 ];

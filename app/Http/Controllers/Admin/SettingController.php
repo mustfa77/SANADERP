@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\UpdateAlertSettingsRequest;
 use App\Http\Requests\Admin\UpdateAppearanceSettingsRequest;
 use App\Http\Requests\Admin\UpdateGeneralSettingsRequest;
 use App\Http\Requests\Admin\UpdateMailSettingsRequest;
@@ -47,6 +48,8 @@ class SettingController extends Controller
                 'backup_auto_enabled' => Setting::boolean('backup_auto_enabled'),
             ] + collect(Setting::MAINTENANCE)->map(fn (array $definition, string $key): int => Setting::integer($key))->all(),
             'maintenanceDefinitions' => Setting::MAINTENANCE,
+            'alerts' => collect(Setting::ALERTS)->map(fn (array $definition, string $key): int => Setting::integer($key))->all(),
+            'alertDefinitions' => Setting::ALERTS,
             'backups' => $this->backups->all(),
         ]);
     }
@@ -150,6 +153,14 @@ class SettingController extends Controller
         }
 
         return redirect()->route('admin.settings.edit', ['tab' => 'maintenance'])->with('success', __('settings.flash.updated'));
+    }
+
+    public function updateAlerts(UpdateAlertSettingsRequest $request): RedirectResponse
+    {
+        $values = collect(Setting::ALERTS)->keys()->mapWithKeys(fn (string $key): array => [$key => (string) $request->integer($key)])->all();
+        $this->audited($this->saveValues($values), 'alerts');
+
+        return redirect()->route('admin.settings.edit', ['tab' => 'alerts'])->with('success', __('settings.flash.updated'));
     }
 
     public function updateSecurity(UpdateSecuritySettingsRequest $request): RedirectResponse

@@ -33,7 +33,9 @@ return [
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app/private'),
-            'serve' => true,
+            // Private files (documents, backups) are only streamed by
+            // permission-checked controllers, never by a storage URL.
+            'serve' => false,
             'throw' => false,
             'report' => false,
         ],

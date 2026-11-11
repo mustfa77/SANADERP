@@ -29,7 +29,8 @@ return [
         'recruitment' => [
             'recruitment' => null,
             'candidates' => null,
-            'documents' => null,
+            'documents' => ['view', 'upload', 'replace', 'delete_version', 'print_authority_file'],
+            'document_types' => ['manage'],
             'agencies' => null,
             'authorities' => null,
             'website_requests' => null,
@@ -60,7 +61,7 @@ return [
             'users' => null,
             'roles' => null,
             'audit_log' => ['view', 'export', 'print'],
-            'settings' => ['view', 'edit'],
+            'settings' => ['view', 'edit', 'manage'],
         ],
     ],
 

@@ -20,8 +20,8 @@
                     <tbody>
                         @forelse ($documents as $document)
                             <tr>
-                                <td>{{ $document->candidate?->trans('name') ?? '—' }}</td>
-                                <td>{{ $document->type }}</td>
+                                <td>{{ $document->documentable?->trans('name') ?? '—' }}</td>
+                                <td>{{ $document->displayName() }}</td>
                                 <td><span dir="ltr">{{ $document->created_at->format('Y-m-d') }}</span></td>
                             </tr>
                         @empty

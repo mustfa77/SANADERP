@@ -12,7 +12,7 @@ class SettingSeeder extends Seeder
      */
     public function run(): void
     {
-        foreach (Setting::SECURITY + Setting::MAINTENANCE as $key => $definition) {
+        foreach (Setting::SECURITY + Setting::MAINTENANCE + Setting::ALERTS as $key => $definition) {
             Setting::query()->firstOrCreate(['key' => $key], ['value' => (string) $definition['default']]);
         }
     }

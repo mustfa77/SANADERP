@@ -35,4 +35,6 @@ return [
     'fix_errors' => 'Please fix the errors below.',
     'soon' => 'Soon',
     'system' => 'System',
+    'active' => 'Active',
+    'inactive' => 'Inactive',
 ];

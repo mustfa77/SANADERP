@@ -4,9 +4,16 @@ use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\BackupController;
 use App\Http\Controllers\Admin\BranchController;
 use App\Http\Controllers\Admin\BranchSwitchController;
+use App\Http\Controllers\Admin\CountryController;
+use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\DocumentController;
+use App\Http\Controllers\Admin\DocumentsDemoController;
+use App\Http\Controllers\Admin\DocumentTypeController;
 use App\Http\Controllers\Admin\ProfileController;
+use App\Http\Controllers\Admin\ReferenceController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Admin\TravelStageController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\ForcePasswordController;
 use App\Http\Controllers\Auth\LoginController;
@@ -20,6 +27,7 @@ use App\Models\Branch;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\BackupService;
+use App\Support\Reference\ReferenceRegistry;
 use Illuminate\Support\Facades\Route;
 
 Route::get('lang/{locale}', LanguageController::class)->name('lang.switch');
@@ -65,7 +73,7 @@ Route::middleware(['auth', 'active'])->group(function (): void {
 |--------------------------------------------------------------------------
 */
 Route::middleware(['panel', 'user.type:internal'])->prefix('admin')->name('admin.')->group(function (): void {
-    Route::view('/', 'dashboard')->middleware('can:dashboard.view')->name('dashboard');
+    Route::get('/', DashboardController::class)->middleware('can:dashboard.view')->name('dashboard');
 
     Route::post('branch', BranchSwitchController::class)->name('branch.switch');
 
@@ -129,6 +137,71 @@ Route::middleware(['panel', 'user.type:internal'])->prefix('admin')->name('admin
         Route::get('backups/{backup}', [BackupController::class, 'download'])->where('backup', BackupService::NAME_PATTERN)->name('backups.download');
         Route::delete('backups/{backup}', [BackupController::class, 'destroy'])->where('backup', BackupService::NAME_PATTERN)->name('backups.destroy');
     });
+    Route::put('settings/alerts', [SettingController::class, 'updateAlerts'])->middleware('can:settings.manage')->name('settings.alerts');
+
+    /*
+    | Reference data lists (Settings): one route set per ReferenceRegistry
+    | resource, each protected by that resource's permissions.
+    */
+    foreach (app(ReferenceRegistry::class)->all() as $key => $resource) {
+        Route::prefix('settings/'.str_replace('_', '-', $key))
+            ->name("reference.{$key}.")
+            ->controller(ReferenceController::class)
+            ->group(function () use ($key, $resource): void {
+                Route::get('/', 'index')->middleware('can:'.$resource->permission('view'))->defaults('resource', $key)->name('index');
+                Route::get('create', 'create')->middleware('can:'.$resource->permission('create'))->defaults('resource', $key)->name('create');
+                Route::post('/', 'store')->middleware('can:'.$resource->permission('create'))->defaults('resource', $key)->name('store');
+                Route::get('{record}/edit', 'edit')->middleware('can:'.$resource->permission('edit'))->defaults('resource', $key)->whereNumber('record')->name('edit');
+                Route::put('{record}', 'update')->middleware('can:'.$resource->permission('edit'))->defaults('resource', $key)->whereNumber('record')->name('update');
+                Route::patch('{record}/activate', 'activate')->middleware('can:'.$resource->permission('edit'))->defaults('resource', $key)->whereNumber('record')->name('activate');
+                Route::patch('{record}/deactivate', 'deactivate')->middleware('can:'.$resource->permission('edit'))->defaults('resource', $key)->whereNumber('record')->name('deactivate');
+                Route::delete('{record}', 'destroy')->middleware('can:'.$resource->permission('delete'))->defaults('resource', $key)->whereNumber('record')->name('destroy');
+
+                if ($resource->isSortable()) {
+                    Route::patch('{record}/move', 'move')->middleware('can:'.$resource->permission('edit'))->defaults('resource', $key)->whereNumber('record')->name('move');
+                }
+            });
+    }
+
+    // Country page (travel stages and document types tabs)
+    Route::get('settings/countries/{country}', [CountryController::class, 'show'])->middleware('can:settings.view')->whereNumber('country')->name('countries.show');
+    Route::middleware('can:settings.manage')->prefix('settings/countries/{country}/stages')->name('countries.stages.')
+        ->controller(TravelStageController::class)->scopeBindings()->group(function (): void {
+            Route::get('create', 'create')->name('create');
+            Route::post('/', 'store')->name('store');
+            Route::get('{stage}/edit', 'edit')->name('edit');
+            Route::put('{stage}', 'update')->name('update');
+            Route::patch('{stage}/move', 'move')->name('move');
+            Route::patch('{stage}/toggle', 'toggle')->name('toggle');
+            Route::delete('{stage}', 'destroy')->name('destroy');
+        });
+
+    // Documents engine (files are only served through these routes)
+    Route::prefix('documents')->name('documents.')->controller(DocumentController::class)->group(function (): void {
+        Route::post('{ownerType}/{ownerId}/types/{documentType}', 'upload')->middleware('can:documents.upload')->whereNumber('ownerId')->name('upload');
+        Route::post('{ownerType}/{ownerId}/extra', 'extra')->middleware('can:documents.upload')->whereNumber('ownerId')->name('extra');
+        Route::post('{ownerType}/{ownerId}/authorities/{authority}/print', 'print')->middleware('can:documents.print_authority_file')->whereNumber('ownerId')->name('print');
+        Route::get('files/{documentFile}', 'show')->middleware('can:documents.view')->name('files.show');
+        Route::delete('files/{documentFile}', 'destroyVersion')->middleware('can:documents.delete_version')->name('files.destroy');
+        Route::get('prints/{documentPrint}', 'downloadStoredPrint')->middleware('can:documents.print_authority_file')->name('prints.download');
+    });
+
+    if (app()->isLocal()) {
+        Route::get('dev/documents-demo', DocumentsDemoController::class)->middleware('can:documents.view')->name('documents.demo');
+    }
+
+    // Document types (global list; country types are shown on the country page)
+    Route::get('settings/document-types', [DocumentTypeController::class, 'index'])->middleware('can:settings.view')->name('document-types.index');
+    Route::middleware('can:document_types.manage')->prefix('settings/document-types')->name('document-types.')
+        ->controller(DocumentTypeController::class)->group(function (): void {
+            Route::get('create', 'create')->name('create');
+            Route::post('/', 'store')->name('store');
+            Route::get('{documentType}/edit', 'edit')->name('edit');
+            Route::put('{documentType}', 'update')->name('update');
+            Route::patch('{documentType}/move', 'move')->name('move');
+            Route::patch('{documentType}/toggle', 'toggle')->name('toggle');
+            Route::delete('{documentType}', 'destroy')->name('destroy');
+        });
 });
 
 /*
