@@ -10,6 +10,7 @@ use Database\Factories\CampFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
@@ -36,10 +37,23 @@ class Camp extends Model
     }
 
     /**
-     * In use while workers are housed in it.
+     * @return HasMany<Worker, $this>
+     */
+    public function workers(): HasMany
+    {
+        return $this->hasMany(Worker::class)->withoutGlobalScopes();
+    }
+
+    /**
+     * In use while workers are housed in it, or once a recruitment order
+     * recorded it as the arrival housing.
      */
     public function isInUse(): bool
     {
-        return Worker::query()->withoutGlobalScopes()->where('camp_id', $this->getKey())->exists();
+        return Worker::query()->withoutGlobalScopes()->where('camp_id', $this->getKey())->exists()
+            || RecruitmentOrder::query()->withoutGlobalScopes()->where('arrival_camp_id', $this->getKey())->exists()
+            || RentalContract::query()->withoutGlobalScopes()->where('return_camp_id', $this->getKey())->exists()
+            || RentalContractWorker::query()->where('return_camp_id', $this->getKey())->exists()
+            || CampMovement::query()->withoutGlobalScopes()->where(fn ($query) => $query->where('from_camp_id', $this->getKey())->orWhere('to_camp_id', $this->getKey()))->exists();
     }
 }

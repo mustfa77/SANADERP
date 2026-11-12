@@ -27,7 +27,7 @@ return [
     */
     'sections' => [
         'recruitment' => [
-            'recruitment' => null,
+            'recruitment' => ['view', 'create', 'edit', 'export', 'print'],
             'candidates' => null,
             'documents' => ['view', 'upload', 'replace', 'delete_version', 'print_authority_file'],
             'document_types' => ['manage'],

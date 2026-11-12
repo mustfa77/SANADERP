@@ -25,7 +25,6 @@ return [
         'district' => 'الحي',
         'national_address' => 'العنوان الوطني',
         'branch_id' => 'الفرع',
-        'visa_balance' => 'رصيد التأشيرات',
         'notes' => 'ملاحظات',
         'is_active' => 'العميل نشط',
         'created_by' => 'أُضيف بواسطة',

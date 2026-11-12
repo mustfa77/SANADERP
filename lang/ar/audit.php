@@ -24,6 +24,8 @@ return [
     ],
 
     'targets' => [
+        'Trip' => 'رحلة',
+        'WorkerCase' => 'حالة',
         'User' => 'مستخدم',
         'Role' => 'دور',
         'Branch' => 'فرع',
@@ -39,15 +41,40 @@ return [
         'CompletedVisaListSetting' => 'قائمة تأشيرات',
         'DocumentType' => 'نوع مستند',
         'Document' => 'مستند',
-        'Candidate' => 'مرشحة',
+        'Candidate' => 'مرشح',
         'Worker' => 'عامل',
         'Client' => 'عميل',
+        'RecruitmentOrder' => 'طلب استقدام',
+        'RentalContract' => 'عقد تأجير',
+        'HourlyBooking' => 'حجز بالساعة',
+        'Payment' => 'دفعة',
+        'Refund' => 'استرجاع',
     ],
 
     /*
     | اسم مختصر لكل إجراء (للفلاتر والجداول).
     */
     'action_names' => [
+        'trip' => [
+            'created' => 'إنشاء رحلة',
+            'assigned' => 'تحديد سائق الرحلة',
+            'started' => 'بدء رحلة',
+            'completed' => 'إنهاء رحلة',
+            'cancelled' => 'إلغاء رحلة',
+        ],
+        'driver' => [
+            'created' => 'إضافة سائق',
+            'updated' => 'تعديل سائق',
+        ],
+        'case' => [
+            'opened' => 'فتح حالة',
+            'decided' => 'قرار حالة',
+            'completed' => 'إنجاز حالة',
+        ],
+        'camp' => [
+            'moved' => 'تغيير سكن عامل',
+            'attendance' => 'تحضير السكن',
+        ],
         'auth' => [
             'login' => 'تسجيل دخول',
             'logout' => 'تسجيل خروج',
@@ -106,6 +133,43 @@ return [
             'created' => 'إضافة عامل',
             'updated' => 'تعديل عامل',
             'status_changed' => 'تغيير حالة عامل',
+            'cv_updated' => 'تحديث السيرة الذاتية',
+            'rental_type_changed' => 'تغيير نوع تأجير العامل',
+        ],
+        'rental' => [
+            'created' => 'إنشاء عقد تأجير',
+            'renewed' => 'تجديد عقد تأجير',
+            'closed' => 'إغلاق عقد تأجير',
+            'replaced' => 'استبدال عامل في عقد تأجير',
+        ],
+        'hourly' => [
+            'created' => 'إنشاء حجز بالساعة',
+            'completed' => 'إكمال حجز بالساعة',
+            'cancelled' => 'إلغاء حجز بالساعة',
+            'departed' => 'خروج عامل لحجز بالساعة',
+        ],
+        'payment' => [
+            'recorded' => 'تسجيل دفعة',
+            'verified' => 'اعتماد دفعة',
+            'deleted' => 'حذف دفعة',
+        ],
+        'refund' => [
+            'requested' => 'طلب استرجاع',
+            'approved' => 'اعتماد استرجاع',
+            'rejected' => 'رفض استرجاع',
+        ],
+        'recruitment' => [
+            'created' => 'إنشاء طلب استقدام',
+            'candidate_selected' => 'اختيار مرشح',
+            'candidate_released' => 'إلغاء اختيار مرشح',
+            'contracted' => 'تسجيل عقد استقدام',
+            'travel_started' => 'بدء إجراءات السفر',
+            'stage_completed' => 'إنجاز مرحلة سفر',
+            'arrived' => 'وصول عامل',
+            'delivered' => 'تسليم عامل',
+            'completed' => 'اكتمال فترة التجربة',
+            'returned' => 'إرجاع عامل خلال التجربة',
+            'cancelled' => 'إلغاء طلب استقدام',
         ],
         'client' => [
             'created' => 'إضافة عميل',
@@ -141,6 +205,26 @@ return [
     | نص الوصف الكامل لكل إجراء.
     */
     'actions' => [
+        'trip' => [
+            'created' => 'تم إنشاء الرحلة :number',
+            'assigned' => 'تم إسناد الرحلة :number إلى :driver',
+            'started' => 'بدأت الرحلة :number',
+            'completed' => 'تمت الرحلة :number',
+            'cancelled' => 'تم إلغاء الرحلة :number',
+        ],
+        'driver' => [
+            'created' => 'تمت إضافة السائق :name',
+            'updated' => 'تم تعديل بيانات السائق :name',
+        ],
+        'case' => [
+            'opened' => 'تم فتح الحالة :number للعامل :worker',
+            'decided' => 'الحالة :number للعامل :worker: :decision',
+            'completed' => 'تم إنجاز الحالة :number للعامل :worker (:decision)',
+        ],
+        'camp' => [
+            'moved' => 'تم نقل :name: :from ← :to',
+            'attendance' => 'تحضير :camp بتاريخ :date',
+        ],
         'auth' => [
             'login' => 'سجّل :name الدخول',
             'logout' => 'سجّل :name الخروج',
@@ -199,6 +283,43 @@ return [
             'created' => 'تمت إضافة العامل :name',
             'updated' => 'تم تعديل بيانات العامل :name',
             'status_changed' => 'تغيّرت حالة العامل :name من ":from" إلى ":to"',
+            'cv_updated' => 'تم تحديث السيرة الذاتية للعامل :name',
+            'rental_type_changed' => 'تم تغيير نوع تأجير :name إلى: :type',
+        ],
+        'rental' => [
+            'created' => 'تم إنشاء عقد التأجير :number للعميل :client (:worker)',
+            'renewed' => 'تم تجديد عقد التأجير :previous بالعقد :number',
+            'closed' => 'تم إغلاق عقد التأجير :number (:status)',
+            'replaced' => 'تم استبدال العامل في العقد :number: :old ← :new',
+        ],
+        'hourly' => [
+            'created' => 'تم إنشاء الحجز بالساعة :number للعميل :client (:worker)',
+            'completed' => 'تم إكمال الحجز بالساعة :number',
+            'cancelled' => 'تم إلغاء الحجز بالساعة :number (:reason)',
+            'departed' => 'خرج العامل للحجز بالساعة :number',
+        ],
+        'payment' => [
+            'recorded' => 'تم تسجيل دفعة :amount للرقم :number (:method)',
+            'verified' => 'تم اعتماد دفعة :amount للرقم :number',
+            'deleted' => 'تم حذف دفعة :amount من :number',
+        ],
+        'refund' => [
+            'requested' => 'تم طلب استرجاع :amount للرقم :number',
+            'approved' => 'تم اعتماد استرجاع :amount للرقم :number',
+            'rejected' => 'تم رفض استرجاع :amount للرقم :number',
+        ],
+        'recruitment' => [
+            'created' => 'تم إنشاء طلب الاستقدام :number للعميل :client',
+            'candidate_selected' => 'تم اختيار :worker لطلب الاستقدام :number',
+            'candidate_released' => 'تم إلغاء اختيار :worker من طلب الاستقدام :number',
+            'contracted' => 'تم تسجيل عقد طلب الاستقدام :number',
+            'travel_started' => 'بدأت إجراءات السفر لطلب الاستقدام :number',
+            'stage_completed' => 'تم إنجاز مرحلة ":stage" في طلب الاستقدام :number',
+            'arrived' => 'تم تسجيل وصول العامل في طلب الاستقدام :number',
+            'delivered' => 'تم تسليم العامل في طلب الاستقدام :number',
+            'completed' => 'اكتملت فترة التجربة في طلب الاستقدام :number',
+            'returned' => 'تم إرجاع العامل خلال التجربة في طلب الاستقدام :number (:reason)',
+            'cancelled' => 'تم إلغاء طلب الاستقدام :number (:reason)',
         ],
         'client' => [
             'created' => 'تمت إضافة العميل :name',

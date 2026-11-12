@@ -5,7 +5,7 @@ return [
     'create' => 'إضافة عامل',
     'edit' => 'تعديل بيانات العامل',
     'show' => 'ملف العامل',
-    'search_name' => 'ابحث بالاسم...',
+    'search_name' => 'الاسم أو رقم العامل أو الرقم المرجعي...',
     'search_passport' => 'رقم الجواز (مطابق)',
     'search_iqama' => 'رقم الإقامة (مطابق)',
     'change_status' => 'تغيير الحالة',
@@ -129,6 +129,17 @@ return [
         'open_existing' => 'فتح ملف العامل',
         'iqama_format' => 'رقم الإقامة يجب أن يكون 10 أرقام ويبدأ بالرقم 2.',
         'salary_reason_required' => 'اكتب سبب تغيير الراتب.',
+    ],
+
+    'review' => [
+        'title' => 'مراجعة المرشحة',
+        'reason_hint' => 'السبب إلزامي عند الرفض.',
+        'actions' => [
+            'under_review' => 'بدء المراجعة',
+            'ready_for_selection' => 'اعتماد: جاهزة للاختيار',
+            'rejected' => 'رفض',
+            'candidate_new' => 'إعادة كمرشحة جديدة',
+        ],
     ],
 
     'flash' => [

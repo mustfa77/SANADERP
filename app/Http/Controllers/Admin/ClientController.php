@@ -8,6 +8,7 @@ use App\Models\Branch;
 use App\Models\Client;
 use App\Models\User;
 use App\Services\AuditLogger;
+use App\Services\Clients\ClientRegistrar;
 use App\Services\SensitiveData;
 use App\Support\ProfileTabs;
 use Illuminate\Database\Eloquent\Builder;
@@ -22,11 +23,7 @@ class ClientController extends Controller
 {
     private const FILTERS = ['search', 'national_id', 'branch_id', 'status'];
 
-    private const AUDITED_FIELDS = [
-        'name_ar', 'name_en', 'phone', 'phone2', 'email', 'city', 'district', 'national_address', 'branch_id', 'notes', 'is_active',
-    ];
-
-    public function __construct(private AuditLogger $audit) {}
+    public function __construct(private AuditLogger $audit, private ClientRegistrar $registrar) {}
 
     public function index(Request $request): View
     {
@@ -46,11 +43,7 @@ class ClientController extends Controller
 
     public function store(ClientRequest $request): RedirectResponse
     {
-        $client = new Client([...$request->validated(), 'is_active' => $request->boolean('is_active', true)]);
-        $client->created_by = $request->user()->id;
-        $client->save();
-
-        $this->audit->log('client.created', $client, ['name' => $client->translations('name')], new: $this->auditable($client));
+        $client = $this->registrar->register([...$request->validated(), 'is_active' => $request->boolean('is_active', true)], $request->user());
 
         return redirect()->route('admin.clients.show', $client)->with('success', __('clients.flash.created'));
     }
@@ -74,9 +67,9 @@ class ClientController extends Controller
 
     public function update(ClientRequest $request, Client $client): RedirectResponse
     {
-        $old = $this->auditable($client);
+        $old = ClientRegistrar::auditable($client);
         $client->update([...$request->validated(), 'is_active' => $request->boolean('is_active')]);
-        $new = $this->auditable($client);
+        $new = ClientRegistrar::auditable($client);
         $changed = array_keys(array_diff_assoc(array_map('strval', $new), array_map('strval', $old)));
 
         if ($changed !== []) {
@@ -102,7 +95,6 @@ class ClientController extends Controller
                     __('clients.fields.email') => $client->email,
                     __('clients.fields.city') => $client->city,
                     __('clients.fields.branch_id') => $client->branch?->trans('name'),
-                    __('clients.fields.visa_balance') => $client->visa_balance,
                     __('clients.fields.is_active') => $client->is_active ? __('common.active') : __('common.inactive'),
                 ]);
             });
@@ -139,19 +131,5 @@ class ClientController extends Controller
     private function branches(User $user): Collection
     {
         return Branch::query()->whereKey($user->allowedBranchIds())->orderBy('code')->get();
-    }
-
-    /**
-     * The national ID is never written in clear: only a short prefix of its
-     * HMAC, which shows that it changed.
-     *
-     * @return array<string, mixed>
-     */
-    private function auditable(Client $client): array
-    {
-        return [
-            ...array_map(fn ($value) => is_bool($value) ? (int) $value : $value, $client->only(self::AUDITED_FIELDS)),
-            'national_id' => $client->national_id_lookup ? substr($client->national_id_lookup, 0, 8) : null,
-        ];
     }
 }

@@ -26,6 +26,20 @@
                         @can('update', $worker)
                             <a href="{{ route('admin.workers.edit', $worker) }}" class="btn btn-sm btn-success"><i class="ri-pencil-line me-1"></i>{{ __('common.edit') }}</a>
                         @endcan
+                        @if ($worker->status === \App\Enums\WorkerStatus::ReadyForSelection && $worker->sponsor_type === \App\Enums\SponsorType::Client)
+                            @can('create', App\Models\RecruitmentOrder::class)
+                                <a href="{{ route('admin.recruitment.create', ['worker' => $worker->id]) }}" class="btn btn-sm btn-primary">
+                                    <i class="ri-flight-takeoff-line me-1"></i>{{ __('recruitment.direct_order') }}
+                                </a>
+                            @endcan
+                        @endif
+                        @can('candidates.approve')
+                            @if ($reviewTransitions !== [])
+                                <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#review-modal">
+                                    <i class="ri-user-search-line me-1"></i>{{ __('workers.review.title') }}
+                                </button>
+                            @endif
+                        @endcan
                         @can('changeStatus', $worker)
                             @if ($manualTransitions !== [])
                                 <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#change-status-modal">
@@ -78,6 +92,12 @@
     @can('changeStatus', $worker)
         @if ($manualTransitions !== [])
             @include('admin.workers._status-modal')
+        @endif
+    @endcan
+
+    @can('candidates.approve')
+        @if ($reviewTransitions !== [])
+            @include('admin.workers._review-modal')
         @endif
     @endcan
 @endsection

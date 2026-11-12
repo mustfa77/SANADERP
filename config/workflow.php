@@ -65,6 +65,12 @@ return [
     ],
 
     /*
+    | Candidate review targets (permission candidates.approve): screening
+    | before a candidate can be selected for a recruitment order.
+    */
+    'review' => ['under_review', 'ready_for_selection', 'rejected', 'candidate_new'],
+
+    /*
     | Statuses a worker may start with when entered by hand (existing workers
     | already in the country). New candidates start as candidate_new.
     */

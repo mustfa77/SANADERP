@@ -4,7 +4,7 @@
     $canSee = fn (array $item): bool => $item['permission'] === null || $menuUser->can($item['permission']);
     $isActive = fn (array $item): bool => $item['route'] !== null && request()->routeIs(
         $item['active'] ?? str($item['route'])->beforeLast('.')->append('.*')->toString()
-    ) && (! isset($item['params']['tab']) || request('tab') === $item['params']['tab']);
+    ) && collect($item['params'] ?? [])->every(fn ($value, $key): bool => request($key) === $value);
     $menu = collect(config('menu'))->map(fn (array $items): array => collect($items)
         ->map(function (array $item) use ($canSee): ?array {
             if (isset($item['children'])) {
@@ -56,7 +56,7 @@
                                 </li>
                             @else
                                 <li>
-                                    <a href="{{ $item['route'] ? route($item['route']) : 'javascript: void(0);' }}"
+                                    <a href="{{ $item['route'] ? route($item['route'], $item['params'] ?? []) : 'javascript: void(0);' }}"
                                         class="waves-effect {{ $isActive($item) ? 'active' : '' }}">
                                         <i class="{{ $item['icon'] }}"></i>
                                         @unless ($item['route'])

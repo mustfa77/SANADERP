@@ -54,6 +54,18 @@ class Setting extends Model
         'document_max_upload_mb' => ['default' => 10, 'min' => 1, 'max' => 50],
     ];
 
+    /**
+     * Recruitment delivery fees (SAR) and periods (Settings > Recruitment).
+     *
+     * @var array<string, array{default: int, min: int, max: int}>
+     */
+    public const RECRUITMENT = [
+        'home_delivery_fee' => ['default' => 120, 'min' => 0, 'max' => 5000],
+        'camp_free_days' => ['default' => 1, 'min' => 0, 'max' => 30],
+        'camp_daily_fee' => ['default' => 50, 'min' => 0, 'max' => 1000],
+        'probation_days' => ['default' => 90, 'min' => 0, 'max' => 365],
+    ];
+
     public static function get(string $key, mixed $default = null): mixed
     {
         $all = Cache::rememberForever(self::CACHE_KEY, fn (): array => static::query()->pluck('value', 'key')->all());
@@ -66,7 +78,7 @@ class Setting extends Model
      */
     public static function integer(string $key): int
     {
-        $definitions = self::SECURITY + self::MAINTENANCE + self::ALERTS;
+        $definitions = self::SECURITY + self::MAINTENANCE + self::ALERTS + self::RECRUITMENT;
 
         return (int) static::get($key, $definitions[$key]['default'] ?? 0);
     }

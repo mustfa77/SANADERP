@@ -4,7 +4,7 @@ namespace App\Providers;
 
 use App\Models\User;
 use App\Services\Documents\CompletedVisasProvider;
-use App\Services\Documents\NullCompletedVisasProvider;
+use App\Services\Recruitment\RecruitmentCompletedVisas;
 use App\Services\SiteSettings;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -30,8 +30,8 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->singleton(SiteSettings::class);
 
-        // Replaced by the recruitment module's real query later.
-        $this->app->bind(CompletedVisasProvider::class, NullCompletedVisasProvider::class);
+        // Completed visas of the authority file come from recruitment orders.
+        $this->app->bind(CompletedVisasProvider::class, RecruitmentCompletedVisas::class);
     }
 
     /**

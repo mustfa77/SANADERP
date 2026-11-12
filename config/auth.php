@@ -114,4 +114,20 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Demo Login
+    |--------------------------------------------------------------------------
+    |
+    | When both values are set, the login page shows them with a "use demo
+    | account" button so the team can sign in without being sent the
+    | credentials. Leave them empty in production.
+    |
+    */
+
+    'demo_login' => [
+        'email' => env('DEMO_LOGIN_EMAIL'),
+        'password' => env('DEMO_LOGIN_PASSWORD'),
+    ],
+
 ];

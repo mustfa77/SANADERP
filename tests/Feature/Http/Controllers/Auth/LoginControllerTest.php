@@ -30,6 +30,27 @@ class LoginControllerTest extends TestCase
             ->assertSee(__('auth.login.submit', [], 'ar'));
     }
 
+    public function test_login_page_shows_demo_credentials_when_configured(): void
+    {
+        config(['auth.demo_login' => ['email' => 'demo@example.test', 'password' => 'DemoPass1']]);
+
+        $this->get(route('login'))
+            ->assertOk()
+            ->assertSee('id="demo-login"', false)
+            ->assertSee('demo@example.test')
+            ->assertSee('DemoPass1')
+            ->assertSee(__('auth.login.demo.fill', [], 'ar'));
+    }
+
+    public function test_login_page_hides_demo_box_when_not_configured(): void
+    {
+        config(['auth.demo_login' => ['email' => null, 'password' => null]]);
+
+        $this->get(route('login'))
+            ->assertOk()
+            ->assertDontSee('id="demo-login"', false);
+    }
+
     public function test_valid_credentials_log_in_and_redirect_to_dashboard(): void
     {
         $user = $this->userWithRole('rental_team', ['RYD']);

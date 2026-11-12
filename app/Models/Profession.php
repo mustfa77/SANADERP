@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-#[Fillable(['name_ar', 'name_en', 'sort_order', 'is_active'])]
+#[Fillable(['name_ar', 'name_en', 'cv_template', 'sort_order', 'is_active'])]
 class Profession extends Model
 {
     /** @use HasFactory<ProfessionFactory> */

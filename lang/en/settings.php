@@ -10,6 +10,18 @@ return [
         'security' => 'Security',
         'maintenance' => 'Backup & maintenance',
         'alerts' => 'Alerts & documents',
+        'recruitment' => 'Recruitment',
+    ],
+
+    'recruitment' => [
+        'hint' => 'Fees and periods used when a recruited worker is delivered to the client.',
+        'units' => ['days' => 'days', 'sar' => 'SAR'],
+        'fields' => [
+            'home_delivery_fee' => ['label' => 'Home delivery fee', 'help' => 'Charged when the worker is taken to the client\'s home.'],
+            'camp_free_days' => ['label' => 'Free days in the housing', 'help' => 'Days after arrival without a housing fee.'],
+            'camp_daily_fee' => ['label' => 'Housing fee per day', 'help' => 'Charged for each day after the free days until delivery.'],
+            'probation_days' => ['label' => 'Probation period', 'help' => 'Starts on the delivery date.'],
+        ],
     ],
 
     'alerts' => [

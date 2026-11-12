@@ -8,6 +8,26 @@
 
     <x-alerts :summary="false" />
 
+    @php
+        $demo = config('auth.demo_login');
+    @endphp
+    @if (filled($demo['email'] ?? null) && filled($demo['password'] ?? null))
+        <div class="alert alert-info mb-4" id="demo-login">
+            <div class="fw-semibold mb-2"><i class="ri-information-line me-1"></i>{{ __('auth.login.demo.title') }}</div>
+            <div class="font-size-13">{{ __('auth.login.email') }}: <span dir="ltr" class="user-select-all">{{ $demo['email'] }}</span></div>
+            <div class="font-size-13 mb-2">{{ __('auth.login.password') }}: <span dir="ltr" class="user-select-all">{{ $demo['password'] }}</span></div>
+            <button type="button" class="btn btn-sm btn-info" id="demo-login-fill"
+                data-email="{{ $demo['email'] }}" data-password="{{ $demo['password'] }}">{{ __('auth.login.demo.fill') }}</button>
+        </div>
+        <script>
+            document.getElementById('demo-login-fill').addEventListener('click', function () {
+                document.getElementById('email').value = this.dataset.email;
+                document.getElementById('password').value = this.dataset.password;
+                document.getElementById('password').closest('form').querySelector('button[type=submit]').focus();
+            });
+        </script>
+    @endif
+
     <form class="form-horizontal" method="POST" action="{{ route('login.store') }}" novalidate>
         @csrf
 

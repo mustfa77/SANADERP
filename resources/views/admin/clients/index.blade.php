@@ -60,7 +60,6 @@
                             <th>{{ __('clients.fields.phone') }}</th>
                             <th>{{ __('clients.fields.city') }}</th>
                             <th>{{ __('clients.fields.branch_id') }}</th>
-                            <th class="text-center">{{ __('clients.fields.visa_balance') }}</th>
                             <th>{{ __('clients.fields.is_active') }}</th>
                             <th class="text-end">{{ __('common.actions') }}</th>
                         </tr>
@@ -73,7 +72,6 @@
                                 <td dir="ltr" class="text-start">{{ $client->phone }}</td>
                                 <td>{{ $client->city ?: '—' }}</td>
                                 <td>{{ $client->branch?->trans('name') }}</td>
-                                <td class="text-center">{{ $client->visa_balance }}</td>
                                 <td><x-reference.active-badge :active="$client->is_active" /></td>
                                 <td class="text-end">
                                     <a href="{{ route('admin.clients.show', $client) }}" class="btn btn-sm btn-outline-secondary" title="{{ __('common.view') }}" data-bs-toggle="tooltip"><i class="ri-eye-line"></i></a>
@@ -83,7 +81,7 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="8" class="text-center text-muted py-4">{{ __('common.no_results') }}</td></tr>
+                            <tr><td colspan="7" class="text-center text-muted py-4">{{ __('common.no_results') }}</td></tr>
                         @endforelse
                     </tbody>
                 </table>

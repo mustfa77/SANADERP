@@ -24,6 +24,8 @@ return [
     ],
 
     'targets' => [
+        'Trip' => 'Trip',
+        'WorkerCase' => 'Case',
         'User' => 'User',
         'Role' => 'Role',
         'Branch' => 'Branch',
@@ -42,12 +44,37 @@ return [
         'Candidate' => 'Candidate',
         'Worker' => 'Worker',
         'Client' => 'Client',
+        'RecruitmentOrder' => 'Recruitment order',
+        'RentalContract' => 'Rental contract',
+        'HourlyBooking' => 'Hourly booking',
+        'Payment' => 'Payment',
+        'Refund' => 'Refund',
     ],
 
     /*
     | Short name of each action (filters and tables).
     */
     'action_names' => [
+        'trip' => [
+            'created' => 'Trip created',
+            'assigned' => 'Trip driver set',
+            'started' => 'Trip started',
+            'completed' => 'Trip done',
+            'cancelled' => 'Trip cancelled',
+        ],
+        'driver' => [
+            'created' => 'Driver added',
+            'updated' => 'Driver updated',
+        ],
+        'case' => [
+            'opened' => 'Case opened',
+            'decided' => 'Case decided',
+            'completed' => 'Case completed',
+        ],
+        'camp' => [
+            'moved' => 'Worker housing changed',
+            'attendance' => 'Housing roll-call',
+        ],
         'auth' => [
             'login' => 'Login',
             'logout' => 'Logout',
@@ -106,6 +133,43 @@ return [
             'created' => 'Worker added',
             'updated' => 'Worker updated',
             'status_changed' => 'Worker status changed',
+            'cv_updated' => 'Worker CV updated',
+            'rental_type_changed' => 'Worker rental type changed',
+        ],
+        'rental' => [
+            'created' => 'Rental contract created',
+            'renewed' => 'Rental contract renewed',
+            'closed' => 'Rental contract closed',
+            'replaced' => 'Rental worker replaced',
+        ],
+        'hourly' => [
+            'created' => 'Hourly booking created',
+            'completed' => 'Hourly booking completed',
+            'cancelled' => 'Hourly booking cancelled',
+            'departed' => 'Hourly worker left',
+        ],
+        'payment' => [
+            'recorded' => 'Payment recorded',
+            'verified' => 'Payment verified',
+            'deleted' => 'Payment removed',
+        ],
+        'refund' => [
+            'requested' => 'Refund requested',
+            'approved' => 'Refund approved',
+            'rejected' => 'Refund rejected',
+        ],
+        'recruitment' => [
+            'created' => 'Recruitment order created',
+            'candidate_selected' => 'Candidate selected',
+            'candidate_released' => 'Candidate released',
+            'contracted' => 'Recruitment contract recorded',
+            'travel_started' => 'Travel process started',
+            'stage_completed' => 'Travel stage completed',
+            'arrived' => 'Worker arrived',
+            'delivered' => 'Worker delivered',
+            'completed' => 'Probation completed',
+            'returned' => 'Worker returned during probation',
+            'cancelled' => 'Recruitment order cancelled',
         ],
         'client' => [
             'created' => 'Client added',
@@ -141,6 +205,26 @@ return [
     | Full description of each action.
     */
     'actions' => [
+        'trip' => [
+            'created' => 'Trip :number created',
+            'assigned' => 'Trip :number assigned to :driver',
+            'started' => 'Trip :number started',
+            'completed' => 'Trip :number done',
+            'cancelled' => 'Trip :number cancelled',
+        ],
+        'driver' => [
+            'created' => 'Driver :name added',
+            'updated' => 'Driver :name updated',
+        ],
+        'case' => [
+            'opened' => 'Case :number opened for :worker',
+            'decided' => 'Case :number of :worker: :decision',
+            'completed' => 'Case :number of :worker completed (:decision)',
+        ],
+        'camp' => [
+            'moved' => ':name moved: :from → :to',
+            'attendance' => 'Roll-call of :camp for :date',
+        ],
         'auth' => [
             'login' => ':name logged in',
             'logout' => ':name logged out',
@@ -199,6 +283,43 @@ return [
             'created' => 'Worker :name was added',
             'updated' => 'Worker :name was updated',
             'status_changed' => 'Status of :name changed from ":from" to ":to"',
+            'cv_updated' => 'CV of :name was updated',
+            'rental_type_changed' => ':name moved to rental: :type',
+        ],
+        'rental' => [
+            'created' => 'Rental contract :number created for :client (:worker)',
+            'renewed' => 'Rental contract :previous renewed by :number',
+            'closed' => 'Rental contract :number closed (:status)',
+            'replaced' => 'Worker replaced on contract :number: :old → :new',
+        ],
+        'hourly' => [
+            'created' => 'Hourly booking :number created for :client (:worker)',
+            'completed' => 'Hourly booking :number completed',
+            'cancelled' => 'Hourly booking :number cancelled (:reason)',
+            'departed' => 'Worker left for hourly booking :number',
+        ],
+        'payment' => [
+            'recorded' => 'Payment of :amount recorded for :number (:method)',
+            'verified' => 'Payment of :amount verified for :number',
+            'deleted' => 'Payment of :amount removed from :number',
+        ],
+        'refund' => [
+            'requested' => 'Refund of :amount requested for :number',
+            'approved' => 'Refund of :amount approved for :number',
+            'rejected' => 'Refund of :amount rejected for :number',
+        ],
+        'recruitment' => [
+            'created' => 'Recruitment order :number created for :client',
+            'candidate_selected' => ':worker selected for recruitment order :number',
+            'candidate_released' => ':worker released from recruitment order :number',
+            'contracted' => 'Contract recorded for recruitment order :number',
+            'travel_started' => 'Travel process started for recruitment order :number',
+            'stage_completed' => 'Stage ":stage" completed in recruitment order :number',
+            'arrived' => 'Arrival recorded for recruitment order :number',
+            'delivered' => 'Worker delivered for recruitment order :number',
+            'completed' => 'Probation completed for recruitment order :number',
+            'returned' => 'Worker returned during probation in recruitment order :number (:reason)',
+            'cancelled' => 'Recruitment order :number cancelled (:reason)',
         ],
         'client' => [
             'created' => 'Client :name was added',

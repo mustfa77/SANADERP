@@ -71,6 +71,7 @@ return [
         'branch_id' => 'Branch',
         'type' => 'Type',
         'capacity' => 'Capacity',
+        'cv_template' => 'CV template',
         'start_time' => 'Start time',
         'move_time' => 'Driver departure time',
         'hours' => 'Hours',

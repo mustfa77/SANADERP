@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Admin;
 
 use App\Models\Client;
+use App\Models\User;
 use App\Rules\UniqueIdentifier;
 use App\Support\IdentifierHash;
 use Illuminate\Foundation\Http\FormRequest;
@@ -10,6 +11,8 @@ use Illuminate\Validation\Rule;
 
 /**
  * Create / update a client. National ID: Saudi ID (1...) or iqama (2...).
+ * The rules are shared with the "new client" section of the recruitment
+ * order screen (clientRules / clientMessages / clientAttributes with a prefix).
  */
 class ClientRequest extends FormRequest
 {
@@ -24,10 +27,7 @@ class ClientRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        $this->merge([
-            'national_id' => IdentifierHash::normalize($this->input('national_id')),
-            'email' => $this->filled('email') ? strtolower(trim((string) $this->input('email'))) : null,
-        ]);
+        $this->merge(self::normalize($this->all()));
     }
 
     /**
@@ -35,9 +35,45 @@ class ClientRequest extends FormRequest
      */
     public function rules(): array
     {
-        $client = $this->route('client');
+        return self::clientRules($this->user(), $this->route('client'));
+    }
 
+    /**
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return self::clientAttributes();
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return self::clientMessages();
+    }
+
+    /**
+     * Normalised national ID and e-mail.
+     *
+     * @param  array<string, mixed>  $input
+     * @return array<string, mixed>
+     */
+    public static function normalize(array $input): array
+    {
         return [
+            'national_id' => IdentifierHash::normalize($input['national_id'] ?? null),
+            'email' => filled($input['email'] ?? null) ? strtolower(trim((string) $input['email'])) : null,
+        ];
+    }
+
+    /**
+     * @return array<string, array<int, mixed>>
+     */
+    public static function clientRules(User $user, ?Client $client = null, string $prefix = ''): array
+    {
+        $rules = [
             'name_ar' => ['required', 'string', 'max:255'],
             'name_en' => ['nullable', 'string', 'max:255'],
             'national_id' => ['required', 'regex:/^[12]\d{9}$/', new UniqueIdentifier(Client::class, 'national_id_lookup', $client?->id, 'clients.validation.duplicate_national_id')],
@@ -47,29 +83,33 @@ class ClientRequest extends FormRequest
             'city' => ['nullable', 'string', 'max:100'],
             'district' => ['nullable', 'string', 'max:100'],
             'national_address' => ['nullable', 'string', 'max:500'],
-            'branch_id' => ['required', Rule::in($this->user()->allowedBranchIds())],
+            'branch_id' => ['required', Rule::in($user->allowedBranchIds())],
             'notes' => ['nullable', 'string', 'max:2000'],
             'is_active' => ['nullable', 'boolean'],
         ];
+
+        return collect($rules)->mapWithKeys(fn (array $rule, string $field): array => [$prefix.$field => $rule])->all();
     }
 
     /**
      * @return array<string, string>
      */
-    public function attributes(): array
+    public static function clientAttributes(string $prefix = ''): array
     {
-        return collect(array_keys($this->rules()))->mapWithKeys(fn (string $field): array => [$field => __("clients.fields.{$field}")])->all();
+        return collect(['name_ar', 'name_en', 'national_id', 'phone', 'phone2', 'email', 'city', 'district', 'national_address', 'branch_id', 'notes', 'is_active'])
+            ->mapWithKeys(fn (string $field): array => [$prefix.$field => __("clients.fields.{$field}")])
+            ->all();
     }
 
     /**
      * @return array<string, string>
      */
-    public function messages(): array
+    public static function clientMessages(string $prefix = ''): array
     {
         return [
-            'national_id.regex' => __('clients.validation.national_id_format'),
-            'phone.regex' => __('validation.custom.phone.regex'),
-            'phone2.regex' => __('validation.custom.phone.regex'),
+            $prefix.'national_id.regex' => __('clients.validation.national_id_format'),
+            $prefix.'phone.regex' => __('validation.custom.phone.regex'),
+            $prefix.'phone2.regex' => __('validation.custom.phone.regex'),
         ];
     }
 }

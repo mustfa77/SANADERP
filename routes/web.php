@@ -1,36 +1,61 @@
 <?php
 
+use App\Http\Controllers\Admin\AlertController;
 use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\BackupController;
 use App\Http\Controllers\Admin\BranchController;
 use App\Http\Controllers\Admin\BranchSwitchController;
+use App\Http\Controllers\Admin\CampController;
 use App\Http\Controllers\Admin\ClientController;
 use App\Http\Controllers\Admin\CountryController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DocumentController;
 use App\Http\Controllers\Admin\DocumentsDemoController;
 use App\Http\Controllers\Admin\DocumentTypeController;
+use App\Http\Controllers\Admin\DriverController;
+use App\Http\Controllers\Admin\HourlyBookingController;
+use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Admin\ProfileController;
+use App\Http\Controllers\Admin\RecruitmentCandidateController;
+use App\Http\Controllers\Admin\RecruitmentFollowUpController;
+use App\Http\Controllers\Admin\RecruitmentOrderController;
 use App\Http\Controllers\Admin\ReferenceController;
+use App\Http\Controllers\Admin\RefundController;
+use App\Http\Controllers\Admin\RentalCalendarController;
+use App\Http\Controllers\Admin\RentalContractController;
+use App\Http\Controllers\Admin\RentalReportController;
+use App\Http\Controllers\Admin\RentalWorkerController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\TravelStageController;
+use App\Http\Controllers\Admin\TripController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\WorkerCaseController;
 use App\Http\Controllers\Admin\WorkerController;
+use App\Http\Controllers\Admin\WorkerCvController;
+use App\Http\Controllers\Admin\WorkerReviewController;
 use App\Http\Controllers\Auth\ForcePasswordController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\Portal\AgencyPortalController;
+use App\Http\Controllers\Portal\AgencyWorkerController;
 use App\Http\Controllers\Portal\DriverPortalController;
 use App\Models\AuditLog;
 use App\Models\Branch;
 use App\Models\Client;
+use App\Models\HourlyBooking;
+use App\Models\Payment;
+use App\Models\RecruitmentOrder;
+use App\Models\Refund;
+use App\Models\RentalContract;
 use App\Models\Role;
 use App\Models\User;
 use App\Models\Worker;
+use App\Models\WorkerCase;
 use App\Services\BackupService;
+use App\Services\Rental\PaymentService;
 use App\Support\Reference\ReferenceRegistry;
 use Illuminate\Support\Facades\Route;
 
@@ -97,6 +122,111 @@ Route::middleware(['panel', 'user.type:internal'])->prefix('admin')->name('admin
     Route::put('workers/{worker}', [WorkerController::class, 'update'])->middleware('can:update,worker')->name('workers.update');
     Route::post('workers/{worker}/status', [WorkerController::class, 'changeStatus'])->middleware('can:changeStatus,worker')->name('workers.status');
 
+    Route::post('workers/{worker}/review', WorkerReviewController::class)->middleware('can:candidates.approve')->name('workers.review');
+    Route::get('workers/{worker}/cv', [WorkerCvController::class, 'edit'])->middleware('can:update,worker')->name('workers.cv.edit');
+    Route::put('workers/{worker}/cv', [WorkerCvController::class, 'update'])->middleware('can:update,worker')->name('workers.cv.update');
+    Route::get('workers/{worker}/cv/view', [WorkerCvController::class, 'preview'])->middleware('can:view,worker')->name('workers.cv.preview');
+    Route::get('workers/{worker}/cv.pdf', [WorkerCvController::class, 'pdf'])->middleware('can:view,worker')->name('workers.cv.pdf');
+    Route::get('workers/{worker}/full-photo', [WorkerCvController::class, 'fullPhoto'])->middleware('can:view,worker')->name('workers.full-photo');
+
+    // Recruitment orders (BranchScope; every step goes through RecruitmentService)
+    Route::get('recruitment', [RecruitmentOrderController::class, 'index'])->middleware('can:viewAny,'.RecruitmentOrder::class)->name('recruitment.index');
+    Route::get('recruitment/export', [RecruitmentOrderController::class, 'export'])->middleware('can:export,'.RecruitmentOrder::class)->name('recruitment.export');
+    Route::get('recruitment/ready-candidates', [RecruitmentCandidateController::class, 'ready'])->middleware('can:viewAny,'.Worker::class)->name('recruitment.ready');
+    Route::get('recruitment/documents', [RecruitmentCandidateController::class, 'documents'])->middleware(['can:viewAny,'.Worker::class, 'can:documents.view'])->name('recruitment.documents');
+    Route::get('recruitment/follow-up', RecruitmentFollowUpController::class)->middleware('can:viewAny,'.RecruitmentOrder::class)->name('recruitment.follow-up');
+    Route::get('recruitment/create', [RecruitmentOrderController::class, 'create'])->middleware('can:create,'.RecruitmentOrder::class)->name('recruitment.create');
+    Route::post('recruitment', [RecruitmentOrderController::class, 'store'])->middleware('can:create,'.RecruitmentOrder::class)->name('recruitment.store');
+    Route::get('recruitment/{order}', [RecruitmentOrderController::class, 'show'])->middleware('can:view,order')->name('recruitment.show');
+    Route::get('recruitment/{order}/handover.pdf', [RecruitmentOrderController::class, 'handover'])->middleware('can:view,order')->name('recruitment.handover');
+    Route::middleware('can:update,order')->prefix('recruitment/{order}')->name('recruitment.')->controller(RecruitmentOrderController::class)
+        ->scopeBindings()->group(function (): void {
+            Route::post('select', 'selectCandidate')->name('select');
+            Route::post('release', 'releaseCandidate')->name('release');
+            Route::post('contract', 'contract')->name('contract');
+            Route::post('travel', 'startTravel')->name('travel');
+            Route::post('stages/{stage}/complete', 'completeStage')->name('stages.complete');
+            Route::post('arrived', 'arrived')->name('arrived');
+            Route::post('deliver', 'deliver')->name('deliver');
+            Route::post('probation/complete', 'completeProbation')->name('probation.complete');
+            Route::post('probation/return', 'returnDuringProbation')->name('probation.return');
+            Route::post('cancel', 'cancel')->name('cancel');
+        });
+
+    // Rental pool: workers available for monthly / hourly rental (permission checked in the controller)
+    Route::get('rental/workers', [RentalWorkerController::class, 'index'])->name('rental.workers');
+    Route::patch('rental/workers/{worker}', [RentalWorkerController::class, 'assign'])->name('rental.workers.assign');
+    Route::get('rental/calendar', [RentalCalendarController::class, 'index'])->name('rental.calendar');
+    Route::get('rental/calendar/events', [RentalCalendarController::class, 'events'])->name('rental.calendar.events');
+    Route::get('rental/reports', RentalReportController::class)->middleware('can:reports.view')->name('rental.reports');
+
+    // Monthly rental contracts (BranchScope; every step goes through RentalContractService)
+    Route::get('rental-contracts', [RentalContractController::class, 'index'])->middleware('can:viewAny,'.RentalContract::class)->name('rental.index');
+    Route::get('rental-contracts/create', [RentalContractController::class, 'create'])->middleware('can:create,'.RentalContract::class)->name('rental.create');
+    Route::post('rental-contracts', [RentalContractController::class, 'store'])->middleware('can:create,'.RentalContract::class)->name('rental.store');
+    Route::get('rental-contracts/{contract}', [RentalContractController::class, 'show'])->middleware('can:view,contract')->name('rental.show');
+    Route::get('rental-contracts/{contract}/contract.pdf', [RentalContractController::class, 'pdf'])->middleware('can:print,contract')->name('rental.pdf');
+    Route::post('rental-contracts/{contract}/renew', [RentalContractController::class, 'renew'])->middleware('can:update,contract')->name('rental.renew');
+    Route::post('rental-contracts/{contract}/close', [RentalContractController::class, 'close'])->middleware('can:update,contract')->name('rental.close');
+    Route::post('rental-contracts/{contract}/cancel', [RentalContractController::class, 'cancel'])->middleware('can:update,contract')->name('rental.cancel');
+    Route::post('rental-contracts/{contract}/replace', [RentalContractController::class, 'replace'])->middleware('can:update,contract')->name('rental.replace');
+
+    // Hourly bookings (BranchScope; every step goes through HourlyBookingService)
+    Route::get('hourly-bookings', [HourlyBookingController::class, 'index'])->middleware('can:viewAny,'.HourlyBooking::class)->name('hourly.index');
+    Route::get('hourly-bookings/create', [HourlyBookingController::class, 'create'])->middleware('can:create,'.HourlyBooking::class)->name('hourly.create');
+    Route::post('hourly-bookings', [HourlyBookingController::class, 'store'])->middleware('can:create,'.HourlyBooking::class)->name('hourly.store');
+    Route::get('hourly-bookings/{booking}', [HourlyBookingController::class, 'show'])->middleware('can:view,booking')->name('hourly.show');
+    Route::post('hourly-bookings/{booking}/depart', [HourlyBookingController::class, 'depart'])->middleware('can:update,booking')->name('hourly.depart');
+    Route::post('hourly-bookings/{booking}/complete', [HourlyBookingController::class, 'complete'])->middleware('can:update,booking')->name('hourly.complete');
+    Route::post('hourly-bookings/{booking}/cancel', [HourlyBookingController::class, 'cancel'])->middleware('can:update,booking')->name('hourly.cancel');
+
+    // Payments of contracts / bookings (receipts on the private disk)
+    Route::post('payments/{payableType}/{payableId}', [PaymentController::class, 'store'])->middleware('can:create,'.Payment::class)
+        ->whereIn('payableType', array_keys(PaymentService::PAYABLES))->whereNumber('payableId')->name('payments.store');
+    Route::get('payments/{payment}/receipt', [PaymentController::class, 'receipt'])->middleware('can:view,payment')->name('payments.receipt');
+    Route::post('payments/{payment}/verify', [PaymentController::class, 'verify'])->middleware('can:verify,payment')->name('payments.verify');
+    Route::delete('payments/{payment}', [PaymentController::class, 'destroy'])->middleware('can:delete,payment')->name('payments.destroy');
+
+    // Refund requests (early return / cancellation), decided by finance
+    Route::get('refunds', [RefundController::class, 'index'])->middleware('can:viewAny,'.Refund::class)->name('refunds.index');
+    Route::post('refunds/{refund}/approve', [RefundController::class, 'approve'])->middleware('can:decide,refund')->name('refunds.approve');
+    Route::post('refunds/{refund}/reject', [RefundController::class, 'reject'])->middleware('can:decide,refund')->name('refunds.reject');
+
+    // Housing operations (BranchScope: another branch's camp is a 404)
+    Route::get('camps', [CampController::class, 'index'])->middleware('can:camps.view')->name('camps.index');
+    Route::get('camps/movements', [CampController::class, 'movements'])->middleware('can:camp_movements.view')->name('camps.movements');
+    Route::get('camps/{camp}', [CampController::class, 'show'])->middleware('can:camps.view')->whereNumber('camp')->name('camps.show');
+    Route::middleware('can:camp_movements.create')->group(function (): void {
+        Route::post('camps/{camp}/check-in', [CampController::class, 'checkIn'])->name('camps.check-in');
+        Route::post('camps/{camp}/workers/{worker}/move', [CampController::class, 'moveOut'])->name('camps.move');
+        Route::post('camps/{camp}/attendance', [CampController::class, 'attendance'])->name('camps.attendance');
+    });
+
+    // In-system alerts (BranchScope; types filtered by the user's permissions)
+    Route::get('alerts', [AlertController::class, 'index'])->middleware('can:alerts.view')->name('alerts.index');
+    Route::post('alerts/refresh', [AlertController::class, 'refresh'])->middleware(['can:alerts.view', 'throttle:6,1'])->name('alerts.refresh');
+    Route::post('alerts/{alert}/resolve', [AlertController::class, 'resolve'])->middleware('can:alerts.edit')->name('alerts.resolve');
+
+    // Transport: drivers and trips (BranchScope)
+    Route::get('drivers', [DriverController::class, 'index'])->middleware('can:drivers.view')->name('drivers.index');
+    Route::post('drivers', [DriverController::class, 'store'])->middleware('can:drivers.create')->name('drivers.store');
+    Route::put('drivers/{driver}', [DriverController::class, 'update'])->middleware('can:drivers.edit')->name('drivers.update');
+    Route::get('trips', [TripController::class, 'index'])->middleware('can:trips.view')->name('trips.index');
+    Route::post('trips', [TripController::class, 'store'])->middleware('can:trips.create')->name('trips.store');
+    Route::middleware('can:trips.edit')->prefix('trips/{trip}')->name('trips.')->controller(TripController::class)->group(function (): void {
+        Route::post('assign', 'assign')->name('assign');
+        Route::post('start', 'start')->name('start');
+        Route::post('complete', 'complete')->name('complete');
+        Route::post('cancel', 'cancel')->name('cancel');
+    });
+
+    // Cases: workers waiting for a decision (BranchScope)
+    Route::get('cases', [WorkerCaseController::class, 'index'])->middleware('can:viewAny,'.WorkerCase::class)->name('cases.index');
+    Route::get('cases/{case}', [WorkerCaseController::class, 'show'])->middleware('can:view,case')->name('cases.show');
+    Route::post('cases/{case}/decide', [WorkerCaseController::class, 'decide'])->middleware('can:decide,case')->name('cases.decide');
+    Route::post('cases/{case}/complete', [WorkerCaseController::class, 'complete'])->middleware('can:update,case')->name('cases.complete');
+    Route::post('cases/{case}/notes', [WorkerCaseController::class, 'note'])->middleware('can:update,case')->name('cases.note');
+
     // Clients (BranchScope: another branch's client is a 404)
     Route::get('clients', [ClientController::class, 'index'])->middleware('can:viewAny,'.Client::class)->name('clients.index');
     Route::get('clients/export', [ClientController::class, 'export'])->middleware('can:export,'.Client::class)->name('clients.export');
@@ -162,6 +292,7 @@ Route::middleware(['panel', 'user.type:internal'])->prefix('admin')->name('admin
         Route::delete('backups/{backup}', [BackupController::class, 'destroy'])->where('backup', BackupService::NAME_PATTERN)->name('backups.destroy');
     });
     Route::put('settings/alerts', [SettingController::class, 'updateAlerts'])->middleware('can:settings.manage')->name('settings.alerts');
+    Route::put('settings/recruitment', [SettingController::class, 'updateRecruitment'])->middleware('can:settings.manage')->name('settings.recruitment');
 
     /*
     | Reference data lists (Settings): one route set per ReferenceRegistry
@@ -236,6 +367,14 @@ Route::middleware(['panel', 'user.type:internal'])->prefix('admin')->name('admin
 Route::middleware(['panel', 'user.type:external_agency'])->prefix('agency')->name('agency.')->group(function (): void {
     Route::get('candidates', [AgencyPortalController::class, 'candidates'])->name('candidates.index');
     Route::get('documents', [AgencyPortalController::class, 'documents'])->name('documents.index');
+
+    // The agency's workers and their CV.
+    Route::get('workers', [AgencyWorkerController::class, 'index'])->name('workers.index');
+    Route::get('workers/{worker}/cv', [AgencyWorkerController::class, 'edit'])->whereNumber('worker')->name('workers.edit');
+    Route::put('workers/{worker}/cv', [AgencyWorkerController::class, 'update'])->whereNumber('worker')->name('workers.update');
+    Route::get('workers/{worker}/cv/view', [AgencyWorkerController::class, 'preview'])->whereNumber('worker')->name('workers.preview');
+    Route::get('workers/{worker}/cv.pdf', [AgencyWorkerController::class, 'pdf'])->whereNumber('worker')->name('workers.pdf');
+    Route::get('workers/{worker}/photo/{type}', [AgencyWorkerController::class, 'photo'])->whereNumber('worker')->whereIn('type', ['face', 'full'])->name('workers.photo');
 });
 
 /*
@@ -245,4 +384,6 @@ Route::middleware(['panel', 'user.type:external_agency'])->prefix('agency')->nam
 */
 Route::middleware(['panel', 'user.type:driver'])->prefix('driver')->name('driver.')->group(function (): void {
     Route::get('trips', [DriverPortalController::class, 'trips'])->name('trips.index');
+    Route::post('trips/{trip}/start', [DriverPortalController::class, 'start'])->whereNumber('trip')->name('trips.start');
+    Route::post('trips/{trip}/complete', [DriverPortalController::class, 'complete'])->whereNumber('trip')->name('trips.complete');
 });

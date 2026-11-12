@@ -25,6 +25,17 @@
 
             {{-- Filters --}}
             <form method="GET" action="{{ route('admin.workers.index') }}" class="row g-2 mb-4">
+                <div class="col-12">
+                    <div class="btn-group flex-wrap" role="group">
+                        <a href="{{ route('admin.workers.index') }}" class="btn btn-sm {{ empty($filters['group']) ? 'btn-primary' : 'btn-outline-primary' }}">{{ __('common.all') }}</a>
+                        @foreach (array_keys($statuses) as $group)
+                            <a href="{{ route('admin.workers.index', ['group' => $group]) }}" class="btn btn-sm {{ ($filters['group'] ?? '') === $group ? 'btn-primary' : 'btn-outline-primary' }}">{{ __('workers.status_groups.'.$group) }}</a>
+                        @endforeach
+                    </div>
+                    @if (! empty($filters['group']))
+                        <input type="hidden" name="group" value="{{ $filters['group'] }}">
+                    @endif
+                </div>
                 <div class="col-lg-3 col-md-6">
                     <input type="search" name="search" value="{{ $filters['search'] ?? '' }}" class="form-control" placeholder="{{ __('workers.search_name') }}">
                 </div>
@@ -106,7 +117,7 @@
                                         @include('admin.workers._avatar', ['worker' => $worker, 'size' => 'xs'])
                                         <div class="ms-2">
                                             <h5 class="font-size-14 mb-0"><a href="{{ route('admin.workers.show', $worker) }}" class="text-body">{{ $worker->trans('name') }}</a></h5>
-                                            <span class="text-muted font-size-12">{{ $worker->sponsor_type->label() }}</span>
+                                            <span class="text-muted font-size-12"><span dir="ltr">{{ $worker->number() }}</span>{{ $worker->cv_reference_no ? ' · '.$worker->cv_reference_no : '' }} · {{ $worker->sponsor_type->label() }}</span>
                                         </div>
                                     </div>
                                 </td>
@@ -116,6 +127,13 @@
                                 <td><x-masked :value="$worker->passport_no" permission="workers.view_sensitive" type="passport" /></td>
                                 <td><x-worker-status :status="$worker->status" /></td>
                                 <td class="text-end">
+                                    @if ($worker->status === \App\Enums\WorkerStatus::ReadyForSelection && $worker->sponsor_type === \App\Enums\SponsorType::Client)
+                                        @can('create', App\Models\RecruitmentOrder::class)
+                                            <a href="{{ route('admin.recruitment.create', ['worker' => $worker->id]) }}" class="btn btn-sm btn-primary">
+                                                <i class="ri-flight-takeoff-line me-1"></i>{{ __('recruitment.direct_order') }}
+                                            </a>
+                                        @endcan
+                                    @endif
                                     <a href="{{ route('admin.workers.show', $worker) }}" class="btn btn-sm btn-outline-secondary" title="{{ __('common.view') }}" data-bs-toggle="tooltip"><i class="ri-eye-line"></i></a>
                                     @can('update', $worker)
                                         <a href="{{ route('admin.workers.edit', $worker) }}" class="btn btn-sm btn-outline-success" title="{{ __('common.edit') }}" data-bs-toggle="tooltip"><i class="ri-pencil-line"></i></a>
