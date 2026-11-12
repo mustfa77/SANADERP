@@ -108,6 +108,13 @@ return [
 
     'key' => env('APP_KEY'),
 
+    /*
+    | Secret for the HMAC lookup columns of passport, iqama and national ID
+    | numbers (App\Support\IdentifierHash). Changing it breaks duplicate
+    | detection and exact search for every stored identifier.
+    */
+    'identifier_hash_key' => env('IDENTIFIER_HASH_KEY'),
+
     'previous_keys' => [
         ...array_filter(
             explode(',', (string) env('APP_PREVIOUS_KEYS', ''))

@@ -2,349 +2,268 @@
 
 @section('title', __('dashboard.title'))
 
-@push('styles')
-    <!-- jvectormap -->
-    <link href="{{ asset('assets/libs/jqvmap/jqvmap.min.css') }}" rel="stylesheet" />
-@endpush
-
 @section('content')
 
     @include('layouts.partials.page-title', ['title' => __('dashboard.title')])
 
-    @php
-        $stats = [
-            ['chart' => 'radialchart-1', 'label' => 'users', 'value' => '2.2k', 'change' => '0.02%', 'up' => true],
-            ['chart' => 'radialchart-2', 'label' => 'views_per_minute', 'value' => '50', 'change' => '1.7%', 'up' => true],
-            ['chart' => 'radialchart-3', 'label' => 'bounce_rate', 'value' => '24.03 %', 'change' => '0.01%', 'up' => false],
-            ['icon' => 'ri-group-line', 'label' => 'new_visitors', 'value' => '435', 'change' => '0.01%', 'up' => true],
-        ];
-    @endphp
+    <div class="alert alert-info d-flex align-items-center py-2" role="alert">
+        <i class="ri-information-line font-size-18 me-2"></i>
+        <div>{{ __('dashboard.demo_notice') }}</div>
+    </div>
 
+    {{-- Headline cards --}}
     <div class="row">
-        @foreach ($stats as $stat)
+        @foreach ($kpis as $kpi)
             <div class="col-xl-3 col-sm-6">
                 <div class="card">
                     <div class="card-body">
                         <div class="d-flex text-muted">
                             <div class="flex-shrink-0 me-3 align-self-center">
-                                @isset($stat['chart'])
-                                    <div id="{{ $stat['chart'] }}" class="apex-charts" dir="ltr"></div>
-                                @else
-                                    <div class="avatar-sm">
-                                        <div class="avatar-title bg-light rounded-circle text-primary font-size-20">
-                                            <i class="{{ $stat['icon'] }}"></i>
-                                        </div>
+                                <div class="avatar-sm">
+                                    <div class="avatar-title bg-{{ $kpi['color'] }}-subtle rounded-circle text-{{ $kpi['color'] }} font-size-20">
+                                        <i class="{{ $kpi['icon'] }}"></i>
                                     </div>
-                                @endisset
+                                </div>
                             </div>
                             <div class="flex-grow-1 overflow-hidden">
-                                <p class="mb-1">{{ __('dashboard.' . $stat['label']) }}</p>
-                                <h5 class="mb-3">{{ $stat['value'] }}</h5>
+                                <p class="mb-1 text-truncate">{{ __('dashboard.kpis.'.$kpi['key']) }}</p>
+                                <h5 class="mb-3">
+                                    {{ number_format($kpi['value']) }}
+                                    @if ($kpi['financial'])
+                                        <span class="font-size-13 text-muted fw-normal">{{ __('dashboard.sar') }}</span>
+                                    @endif
+                                </h5>
                                 <p class="text-truncate mb-0">
-                                    <span class="{{ $stat['up'] ? 'text-success' : 'text-danger' }} me-2"> {{ $stat['change'] }}
-                                        <i class="{{ $stat['up'] ? 'ri-arrow-right-up-line' : 'ri-arrow-right-down-line' }} align-bottom ms-1"></i></span>
+                                    <span class="{{ $kpi['change'] >= 0 ? 'text-success' : 'text-danger' }} me-2" dir="ltr">
+                                        {{ $kpi['change'] >= 0 ? '+' : '' }}{{ $kpi['change'] }}%
+                                        <i class="{{ $kpi['change'] >= 0 ? 'ri-arrow-right-up-line' : 'ri-arrow-right-down-line' }} align-bottom"></i>
+                                    </span>
                                     {{ __('dashboard.from_previous') }}
                                 </p>
                             </div>
                         </div>
                     </div>
-                    <!-- end card-body -->
                 </div>
-                <!-- end card -->
             </div>
-            <!-- end col -->
         @endforeach
     </div>
-    <!-- end row -->
 
     <div class="row">
+        {{-- Revenue & contracts overview --}}
         <div class="col-xl-8">
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex align-items-center">
                         <div class="flex-grow-1">
-                            <h5 class="card-title">{{ __('dashboard.overview') }}</h5>
+                            <h5 class="card-title">{{ $canSeeFinancials ? __('dashboard.overview') : __('dashboard.overview_contracts') }}</h5>
                         </div>
                         <div class="flex-shrink-0">
-                            <div>
-                                <button type="button" class="btn btn-subtle-secondary btn-sm">{{ __('dashboard.all') }}</button>
-                                <button type="button" class="btn btn-subtle-primary btn-sm">{{ __('dashboard.1m') }}</button>
-                                <button type="button" class="btn btn-subtle-secondary btn-sm">{{ __('dashboard.6m') }}</button>
-                                <button type="button" class="btn btn-subtle-secondary btn-sm">{{ __('dashboard.1y') }}</button>
-                            </div>
+                            <span class="badge bg-light text-body font-size-12">{{ __('dashboard.last_12_months') }}</span>
                         </div>
                     </div>
-
-                    <div>
-                        <div id="mixed-chart" class="apex-charts" dir="ltr"></div>
-                    </div>
+                    <div id="overview-chart" class="apex-charts" dir="ltr"></div>
                 </div>
-                <!-- end card-body -->
 
-                <div class="card-body border-top">
-                    <div class="text-muted text-center">
-                        <div class="row">
-                            @foreach ([['primary', 'expenses', '1.2'], ['light', 'maintenance', '2.0'], ['danger', 'profit', '0.4']] as $i => [$color, $label, $pct])
-                                <div class="col-4 {{ $i < 2 ? 'border-end' : '' }}">
-                                    <div>
-                                        <p class="mb-2"><i class="mdi mdi-circle font-size-12 text-{{ $color }} me-1"></i>
-                                            {{ __('dashboard.' . $label) }}</p>
-                                        <h5 class="font-size-16 mb-0">$ 8,524 <span class="text-success font-size-12"><i
-                                                    class="mdi mdi-menu-up font-size-14 me-1"></i>{{ $pct }} %</span>
+                @if ($canSeeFinancials)
+                    <div class="card-body border-top">
+                        <div class="text-muted text-center">
+                            <div class="row">
+                                @foreach ($overviewTotals as $total)
+                                    <div class="col-4 {{ ! $loop->last ? 'border-end' : '' }}">
+                                        <p class="mb-2 text-truncate"><i class="mdi mdi-circle font-size-12 text-{{ $total['color'] }} me-1"></i>
+                                            {{ __('dashboard.totals.'.$total['key']) }}</p>
+                                        <h5 class="font-size-16 mb-0">
+                                            {{ number_format($total['value']) }} <span class="font-size-12 fw-normal">{{ __('dashboard.sar') }}</span>
+                                            <span class="{{ $total['change'] >= 0 ? 'text-success' : 'text-danger' }} font-size-12 d-inline-block" dir="ltr">
+                                                <i class="mdi {{ $total['change'] >= 0 ? 'mdi-menu-up' : 'mdi-menu-down' }} font-size-14"></i>{{ abs($total['change']) }}%
+                                            </span>
                                         </h5>
                                     </div>
-                                </div>
-                            @endforeach
+                                @endforeach
+                            </div>
                         </div>
                     </div>
-                </div>
-                <!-- end card-body -->
+                @endif
             </div>
-            <!-- end card -->
         </div>
-        <!-- end col -->
 
+        {{-- Workers by nationality --}}
         <div class="col-xl-4">
             <div class="card">
                 <div class="card-body">
-                    <div class="d-flex  align-items-center">
-                        <div class="flex-grow-1">
-                            <h5 class="card-title">{{ __('dashboard.social_source') }}</h5>
-                        </div>
-                        <div class="flex-shrink-0">
-                            <select class="form-select form-select-sm mb-0 my-n1">
-                                @foreach (['MAY' => 'may', 'AP' => 'april', 'MA' => 'march', 'FE' => 'february', 'JA' => 'january', 'DE' => 'december'] as $value => $month)
-                                    <option value="{{ $value }}" @selected($loop->first)>{{ __('dashboard.months.' . $month) }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-
-                    <div>
-                        <div id="radialBar-chart" class="apex-charts" dir="ltr"></div>
-                    </div>
-
-                    <div class="row">
-                        @foreach ([['primary', 'ri-facebook-circle-fill', 'Facebook', 125], ['info', 'ri-twitter-fill', 'Twitter', 112], ['danger', 'ri-instagram-line', 'Instagram', 104]] as [$color, $icon, $name, $sales])
-                            <div class="col-4">
-                                <div class="social-source text-center mt-3">
-                                    <div class="avatar-xs mx-auto mb-3">
-                                        <span class="avatar-title rounded-circle bg-{{ $color }} font-size-18">
-                                            <i class="ri {{ $icon }} text-white"></i>
-                                        </span>
-                                    </div>
-                                    <h5 class="font-size-15">{{ $name }}</h5>
-                                    <p class="text-muted mb-0">{{ __('dashboard.sales', ['count' => $sales]) }}</p>
+                    <h5 class="card-title">{{ __('dashboard.workers_by_nationality') }}</h5>
+                    <div id="nationality-chart" class="apex-charts" dir="ltr"></div>
+                    <div class="row mt-2">
+                        @foreach ($nationalities as $nationality)
+                            <div class="col-6">
+                                <div class="d-flex justify-content-between py-1 border-bottom">
+                                    <span class="text-muted">{{ __('dashboard.nationalities.'.$nationality['key']) }}</span>
+                                    <span class="fw-semibold">{{ $nationality['count'] }}</span>
                                 </div>
                             </div>
                         @endforeach
                     </div>
                 </div>
-                <!-- end card-body -->
             </div>
-            <!-- end card -->
         </div>
-        <!-- end col -->
     </div>
-    <!-- end row -->
 
     <div class="row">
+        {{-- Recruitment pipeline --}}
         <div class="col-xl-4">
             <div class="card">
                 <div class="card-body">
-                    <h5 class="card-title">{{ __('dashboard.order_stats') }}</h5>
+                    <h5 class="card-title">{{ __('dashboard.recruitment_pipeline') }}</h5>
                     @php
-                        $orders = [
-                            ['completed', 'ri-checkbox-circle-line', 'success', 70],
-                            ['pending', 'ri-calendar-2-line', 'warning', 45],
-                            ['cancel', 'ri-close-circle-line', 'danger', 19],
-                        ];
+                        $pipelineMax = max(array_column($pipeline, 'count'));
                     @endphp
-                    <div>
-                        <ul class="list-unstyled">
-                            @foreach ($orders as [$label, $icon, $color, $value])
-                                <li class="py-3">
-                                    <div class="d-flex">
-                                        <div class="avatar-xs align-self-center me-3">
-                                            <div class="avatar-title rounded-circle bg-light text-primary font-size-18">
-                                                <i class="{{ $icon }}"></i>
-                                            </div>
-                                        </div>
-                                        <div class="flex-grow-1">
-                                            <p class="text-muted mb-2">{{ __('dashboard.' . $label) }}</p>
-                                            <div class="progress progress-sm animated-progess">
-                                                <div class="progress-bar bg-{{ $color }}" role="progressbar"
-                                                    style="width: {{ $value }}%" aria-valuenow="{{ $value }}" aria-valuemin="0"
-                                                    aria-valuemax="100"></div>
-                                            </div>
+                    <ul class="list-unstyled mb-0">
+                        @foreach ($pipeline as $stage)
+                            <li class="py-2">
+                                <div class="d-flex">
+                                    <div class="avatar-xs align-self-center me-3">
+                                        <div class="avatar-title rounded-circle bg-{{ $stage['color'] }}-subtle text-{{ $stage['color'] }} font-size-16">
+                                            <i class="{{ $stage['icon'] }}"></i>
                                         </div>
                                     </div>
-                                </li>
-                            @endforeach
-                        </ul>
-                    </div>
-
-                    <hr>
-
-                    <div class="text-center">
-                        <div class="row">
-                            @foreach ($orders as [$label, , , $value])
-                                <div class="col-4">
-                                    <div class="mt-2">
-                                        <p class="text-muted mb-2">{{ __('dashboard.' . $label) }}</p>
-                                        <h5 class="font-size-16 mb-0">{{ $value }}</h5>
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <p class="text-muted mb-0">{{ __('dashboard.pipeline.'.$stage['key']) }}</p>
+                                            <span class="fw-semibold">{{ $stage['count'] }}</span>
+                                        </div>
+                                        <div class="progress progress-sm animated-progess">
+                                            <div class="progress-bar bg-{{ $stage['color'] }}" role="progressbar"
+                                                style="width: {{ round($stage['count'] / $pipelineMax * 100) }}%"
+                                                aria-valuenow="{{ $stage['count'] }}" aria-valuemin="0" aria-valuemax="{{ $pipelineMax }}"></div>
+                                        </div>
                                     </div>
                                 </div>
-                            @endforeach
-                        </div>
-                    </div>
+                            </li>
+                        @endforeach
+                    </ul>
                 </div>
-                <!-- end card-body -->
             </div>
-            <!-- end card -->
         </div>
-        <!-- end col -->
 
-        <div class="col-lg-4">
+        {{-- Follow-up alerts --}}
+        <div class="col-xl-4">
             <div class="card">
                 <div class="card-body">
-                    <h4 class="card-title">{{ __('dashboard.notifications') }}</h4>
-
-                    @php
-                        $notifications = [
-                            ['avatar' => 'avatar-2.jpg', 'title' => 'Scott Elliott', 'text' => __('dashboard.noti_1'), 'time' => __('dashboard.min_ago', ['count' => 20])],
-                            ['icon' => 'mdi mdi-account-supervisor', 'title' => __('dashboard.noti_2_title'), 'text' => __('dashboard.noti_2'), 'time' => '9:00 am'],
-                            ['avatar' => 'avatar-3.jpg', 'title' => 'Frank Martin', 'text' => __('dashboard.noti_3'), 'time' => '8:54 am'],
-                            ['icon' => 'mdi mdi-email-outline', 'title' => __('dashboard.noti_4_title'), 'text' => __('dashboard.noti_4'), 'time' => '27-03-2020'],
-                            ['avatar' => 'avatar-4.jpg', 'title' => 'Terry Garrick', 'text' => __('dashboard.noti_5'), 'time' => '27-03-2020'],
-                        ];
-                    @endphp
-
-                    <div class="pe-3" data-simplebar style="max-height: 287px;">
-                        @foreach ($notifications as $n)
-                            <a href="#" class="text-body d-block">
-                                <div class="d-flex py-3">
-                                    <div class="flex-shrink-0 me-3 align-self-center">
-                                        @isset($n['avatar'])
-                                            <img class="rounded-circle avatar-xs" alt=""
-                                                src="{{ asset('assets/images/users/' . $n['avatar']) }}">
-                                        @else
-                                            <div class="avatar-xs">
-                                                <span class="avatar-title bg-primary-subtle  rounded-circle text-primary">
-                                                    <i class="{{ $n['icon'] }}"></i>
-                                                </span>
-                                            </div>
-                                        @endisset
-                                    </div>
-                                    <div class="flex-grow-1 overflow-hidden">
-                                        <h5 class="font-size-14 mb-1">{{ $n['title'] }}</h5>
-                                        <p class="text-truncate mb-0">{{ $n['text'] }}</p>
-                                    </div>
-                                    <div class="flex-shrink-0 font-size-13">{{ $n['time'] }}</div>
+                    <h5 class="card-title">{{ __('dashboard.needs_follow_up') }}</h5>
+                    <div class="pe-2" data-simplebar style="max-height: 330px;">
+                        @foreach ($alerts as $alert)
+                            <div class="d-flex align-items-center py-3 {{ ! $loop->last ? 'border-bottom' : '' }}">
+                                <div class="avatar-xs flex-shrink-0 me-3">
+                                    <span class="avatar-title rounded-circle bg-{{ $alert['color'] }}-subtle text-{{ $alert['color'] }} font-size-16">
+                                        <i class="{{ $alert['icon'] }}"></i>
+                                    </span>
                                 </div>
-                            </a>
+                                <div class="flex-grow-1 overflow-hidden">
+                                    <h5 class="font-size-14 mb-1 text-truncate">{{ __('dashboard.alerts.'.$alert['key'].'.title') }}</h5>
+                                    <p class="text-muted text-truncate mb-0 font-size-13">{{ __('dashboard.alerts.'.$alert['key'].'.hint') }}</p>
+                                </div>
+                                <span class="badge bg-{{ $alert['color'] }} rounded-pill font-size-12 ms-2">{{ $alert['count'] }}</span>
+                            </div>
                         @endforeach
                     </div>
                 </div>
-                <!-- end card-body -->
             </div>
-            <!-- end card -->
         </div>
-        <!-- end col -->
 
-        <div class="col-lg-4">
+        {{-- By branch --}}
+        <div class="col-xl-4">
             <div class="card">
                 <div class="card-body">
-                    <h5 class="card-title mb-3">{{ __('dashboard.revenue_by_location') }}</h5>
-
-                    <div>
-                        <div id="usa" style="height: 226px" dir="ltr"></div>
-                    </div>
-
-                    <div class="text-center mt-4">
-                        <a href="#" class="btn btn-primary btn-sm">{{ __('dashboard.view_more') }}</a>
-                    </div>
+                    <h5 class="card-title">{{ __('dashboard.by_branch') }}</h5>
+                    @if ($branchStats === [])
+                        <p class="text-muted text-center py-4 mb-0">{{ __('dashboard.no_branches') }}</p>
+                    @else
+                        <div id="branch-chart" class="apex-charts" dir="ltr"></div>
+                        <div class="table-responsive mt-2">
+                            <table class="table table-sm table-borderless mb-0 text-center">
+                                <thead class="text-muted">
+                                    <tr>
+                                        <th class="text-start">{{ __('dashboard.branch') }}</th>
+                                        <th>{{ __('dashboard.workers') }}</th>
+                                        <th>{{ __('dashboard.contracts') }}</th>
+                                        @if ($canSeeFinancials)
+                                            <th>{{ __('dashboard.revenue') }}</th>
+                                        @endif
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($branchStats as $row)
+                                        <tr>
+                                            <td class="text-start fw-semibold">{{ $row['name'] }}</td>
+                                            <td>{{ $row['workers'] }}</td>
+                                            <td>{{ $row['contracts'] }}</td>
+                                            @if ($canSeeFinancials)
+                                                <td>{{ number_format($row['revenue'] / 1000) }}k</td>
+                                            @endif
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endif
                 </div>
-                <!-- end card-body -->
             </div>
-            <!-- end card -->
         </div>
-        <!-- end col -->
     </div>
-    <!-- end row -->
 
-    @php
-        $transactions = [
-            ['avatar' => 'avatar-2.jpg', 'id' => '#AP1234', 'name' => 'David Wiley', 'date' => '02 Nov, 2019', 'price' => '1,234', 'qty' => 1, 'amount' => '1,234', 'status' => ['success', 'confirm']],
-            ['letter' => 'W', 'id' => '#AP1235', 'name' => 'Walter Jones', 'date' => '04 Nov, 2019', 'price' => '822', 'qty' => 2, 'amount' => '1,644', 'status' => ['success', 'confirm']],
-            ['avatar' => 'avatar-3.jpg', 'id' => '#AP1236', 'name' => 'Eric Ryder', 'date' => '05 Nov, 2019', 'price' => '1,153', 'qty' => 1, 'amount' => '1,153', 'status' => ['danger', 'cancel']],
-            ['avatar' => 'avatar-6.jpg', 'id' => '#AP1237', 'name' => 'Kenneth Jackson', 'date' => '06 Nov, 2019', 'price' => '1,365', 'qty' => 1, 'amount' => '1,365', 'status' => ['success', 'confirm']],
-            ['letter' => 'R', 'id' => '#AP1238', 'name' => 'Ronnie Spiller', 'date' => '08 Nov, 2019', 'price' => '740', 'qty' => 2, 'amount' => '1,480', 'status' => ['warning', 'pending']],
-        ];
-    @endphp
-
+    {{-- Latest contracts --}}
     <div class="row">
-        <div class="col-lg-12">
+        <div class="col-12">
             <div class="card">
                 <div class="card-body">
-                    <h4 class="card-title mb-4">{{ __('dashboard.latest_transaction') }}</h4>
-
+                    <h4 class="card-title mb-4">{{ __('dashboard.latest_contracts') }}</h4>
+                    @php
+                        $statusColors = ['active' => 'success', 'pending' => 'warning', 'ended' => 'secondary', 'cancelled' => 'danger'];
+                        $typeColors = ['monthly' => 'primary', 'hourly' => 'info', 'recruitment' => 'warning'];
+                    @endphp
                     <div class="table-responsive">
                         <table class="table table-centered table-nowrap mb-0">
-                            <thead>
+                            <thead class="table-light">
                                 <tr>
-                                    <th scope="col" style="width: 50px;">
-                                        <div class="form-check">
-                                            <input type="checkbox" class="form-check-input" id="customCheckall">
-                                            <label class="form-check-label" for="customCheckall"></label>
-                                        </div>
-                                    </th>
-                                    <th scope="col" style="width: 60px;"></th>
-                                    <th scope="col">{{ __('dashboard.id_name') }}</th>
-                                    <th scope="col">{{ __('dashboard.date') }}</th>
-                                    <th scope="col">{{ __('dashboard.price') }}</th>
-                                    <th scope="col">{{ __('dashboard.quantity') }}</th>
-                                    <th scope="col">{{ __('dashboard.amount') }}</th>
-                                    <th scope="col">{{ __('dashboard.status') }}</th>
-                                    <th scope="col">{{ __('dashboard.action') }}</th>
+                                    <th>{{ __('dashboard.table.number') }}</th>
+                                    <th>{{ __('dashboard.table.client') }}</th>
+                                    <th>{{ __('dashboard.table.worker') }}</th>
+                                    <th>{{ __('dashboard.table.type') }}</th>
+                                    <th>{{ __('dashboard.table.start') }}</th>
+                                    @if ($canSeeFinancials)
+                                        <th>{{ __('dashboard.table.amount') }}</th>
+                                    @endif
+                                    <th>{{ __('dashboard.table.status') }}</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach ($transactions as $t)
+                                @foreach ($contracts as $contract)
                                     <tr>
+                                        <td><code dir="ltr">{{ $contract['number'] }}</code></td>
                                         <td>
-                                            <div class="form-check">
-                                                <input type="checkbox" class="form-check-input" id="customCheck{{ $loop->iteration }}">
-                                                <label class="form-check-label" for="customCheck{{ $loop->iteration }}"></label>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar-xs me-2">
+                                                    <span class="avatar-title rounded-circle bg-primary-subtle text-primary">{{ mb_substr($contract['client'], 0, 1) }}</span>
+                                                </div>
+                                                <h5 class="font-size-14 mb-0">{{ $contract['client'] }}</h5>
                                             </div>
                                         </td>
                                         <td>
-                                            @isset($t['avatar'])
-                                                <img src="{{ asset('assets/images/users/' . $t['avatar']) }}" alt="user"
-                                                    class="avatar-xs rounded-circle" />
-                                            @else
-                                                <div class="avatar-xs">
-                                                    <span class="avatar-title rounded-circle bg-primary-subtle  text-success">
-                                                        {{ $t['letter'] }}
-                                                    </span>
-                                                </div>
-                                            @endisset
+                                            {{ $contract['worker'] }}
+                                            <p class="text-muted font-size-12 mb-0">{{ __('dashboard.nationalities.'.$contract['nationality']) }}</p>
                                         </td>
                                         <td>
-                                            <p class="mb-1 font-size-12">{{ $t['id'] }}</p>
-                                            <h5 class="font-size-15 mb-0">{{ $t['name'] }}</h5>
+                                            <span class="badge bg-{{ $typeColors[$contract['type']] }}-subtle text-{{ $typeColors[$contract['type']] }} font-size-12">
+                                                {{ __('dashboard.contract_types.'.$contract['type']) }}
+                                            </span>
                                         </td>
-                                        <td>{{ $t['date'] }}</td>
-                                        <td>$ {{ $t['price'] }}</td>
-                                        <td>{{ $t['qty'] }}</td>
-                                        <td>$ {{ $t['amount'] }}</td>
+                                        <td dir="ltr" class="text-start">{{ $contract['start'] }}</td>
+                                        @if ($canSeeFinancials)
+                                            <td>{{ number_format($contract['amount']) }} {{ __('dashboard.sar') }}</td>
+                                        @endif
                                         <td>
-                                            <i class="mdi mdi-checkbox-blank-circle text-{{ $t['status'][0] }} me-1"></i>
-                                            {{ __('dashboard.' . $t['status'][1]) }}
-                                        </td>
-                                        <td>
-                                            <button type="button" class="btn btn-outline-success btn-sm">{{ __('dashboard.edit') }}</button>
-                                            <button type="button" class="btn btn-outline-danger btn-sm">{{ __('dashboard.cancel') }}</button>
+                                            <i class="mdi mdi-checkbox-blank-circle text-{{ $statusColors[$contract['status']] }} me-1"></i>
+                                            {{ __('dashboard.contract_statuses.'.$contract['status']) }}
                                         </td>
                                     </tr>
                                 @endforeach
@@ -352,23 +271,99 @@
                         </table>
                     </div>
                 </div>
-                <!-- end card-body -->
             </div>
-            <!-- end card -->
         </div>
-        <!-- end col -->
     </div>
-    <!-- end row -->
 
 @endsection
 
 @push('scripts')
-    <!-- apexcharts js -->
+    @php
+        $nationalityChart = array_map(fn (array $nationality): array => [
+            'label' => __('dashboard.nationalities.'.$nationality['key']),
+            'count' => $nationality['count'],
+        ], $nationalities);
+    @endphp
     <script src="{{ asset('assets/libs/apexcharts/apexcharts.min.js') }}"></script>
+    <script>
+        (function () {
+            var styles = getComputedStyle(document.body);
+            var color = function (name, fallback) {
+                return (styles.getPropertyValue('--bs-' + name) || fallback).trim();
+            };
+            var primary = color('primary', '#0bb197');
+            var palette = [primary, color('info', '#4aa3ff'), color('warning', '#f1b44c'), color('danger', '#ff3d60'), color('success', '#2ab57d'), color('secondary', '#74788d')];
+            var rtl = document.documentElement.dir === 'rtl';
+            var fontFamily = 'Cairo, sans-serif';
+            var number = function (value) { return Number(value).toLocaleString(); };
 
-    <!-- jquery.vectormap map -->
-    <script src="{{ asset('assets/libs/jqvmap/jquery.vmap.min.js') }}"></script>
-    <script src="{{ asset('assets/libs/jqvmap/maps/jquery.vmap.usa.js') }}"></script>
+            var overview = @json($overview);
+            var showMoney = @json($canSeeFinancials);
+            var series = [{ name: @json(__('dashboard.chart.contracts')), type: 'line', data: overview.contracts }];
 
-    <script src="{{ asset('assets/js/pages/dashboard.init.js') }}"></script>
+            if (showMoney) {
+                series.unshift(
+                    { name: @json(__('dashboard.chart.rental')), type: 'column', data: overview.rental },
+                    { name: @json(__('dashboard.chart.recruitment')), type: 'column', data: overview.recruitment }
+                );
+            }
+
+            new ApexCharts(document.querySelector('#overview-chart'), {
+                chart: { height: 330, type: 'line', stacked: false, toolbar: { show: false }, fontFamily: fontFamily },
+                series: series,
+                stroke: { width: showMoney ? [0, 0, 3] : [3], curve: 'smooth' },
+                plotOptions: { bar: { columnWidth: '45%', borderRadius: 3 } },
+                colors: showMoney ? [primary, palette[1], palette[2]] : [primary],
+                xaxis: { categories: overview.labels },
+                yaxis: showMoney
+                    ? [
+                        { seriesName: series[0].name, opposite: rtl, labels: { formatter: function (v) { return Math.round(v / 1000) + 'k'; } } },
+                        { seriesName: series[0].name, show: false },
+                        { seriesName: series[2].name, opposite: ! rtl, labels: { formatter: function (v) { return Math.round(v); } } }
+                    ]
+                    : [{ opposite: rtl, labels: { formatter: function (v) { return Math.round(v); } } }],
+                tooltip: { shared: true, intersect: false, y: { formatter: function (v) { return number(v); } } },
+                legend: { position: 'top', horizontalAlign: 'center' },
+                grid: { borderColor: 'rgba(0,0,0,0.06)' },
+                dataLabels: { enabled: false }
+            }).render();
+
+            var nationalities = {{ Js::from($nationalityChart) }};
+            new ApexCharts(document.querySelector('#nationality-chart'), {
+                chart: { height: 250, type: 'donut', fontFamily: fontFamily },
+                series: nationalities.map(function (n) { return n.count; }),
+                labels: nationalities.map(function (n) { return n.label; }),
+                colors: palette,
+                legend: { show: false },
+                dataLabels: { enabled: false },
+                plotOptions: {
+                    pie: {
+                        donut: {
+                            size: '70%',
+                            labels: { show: true, total: { show: true, label: @json(__('dashboard.total')), formatter: function (w) { return number(w.globals.seriesTotals.reduce(function (a, b) { return a + b; }, 0)); } } }
+                        }
+                    }
+                }
+            }).render();
+
+            var branches = @json($branchStats);
+            var branchChart = document.querySelector('#branch-chart');
+            if (branchChart && branches.length) {
+                new ApexCharts(branchChart, {
+                    chart: { height: 200, type: 'bar', toolbar: { show: false }, fontFamily: fontFamily },
+                    series: [
+                        { name: @json(__('dashboard.workers')), data: branches.map(function (b) { return b.workers; }) },
+                        { name: @json(__('dashboard.contracts')), data: branches.map(function (b) { return b.contracts; }) }
+                    ],
+                    xaxis: { categories: branches.map(function (b) { return b.name; }) },
+                    yaxis: { opposite: rtl },
+                    colors: [primary, palette[2]],
+                    plotOptions: { bar: { columnWidth: '50%', borderRadius: 3 } },
+                    legend: { position: 'top' },
+                    dataLabels: { enabled: false },
+                    grid: { borderColor: 'rgba(0,0,0,0.06)' }
+                }).render();
+            }
+        })();
+    </script>
 @endpush

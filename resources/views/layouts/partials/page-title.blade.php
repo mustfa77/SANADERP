@@ -6,7 +6,7 @@
 
             <div class="page-title-right">
                 <ol class="breadcrumb m-0">
-                    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">{{ $parent ?? __('app.brand') }}</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">{{ $parent ?? $site->brand() }}</a></li>
                     <li class="breadcrumb-item active">{{ $title }}</li>
                 </ol>
             </div>

@@ -1,3 +1,5 @@
+<link href="{{ asset('assets/libs/select2/css/select2.min.css') }}" rel="stylesheet" type="text/css" />
+
 @stack('styles')
 
 @if ($dir === 'rtl')
@@ -38,3 +40,8 @@
         font-family: 'Cairo', sans-serif !important;
     }
 </style>
+
+@if ($themeCss = $site->themeCss())
+    {{-- Primary color / button shape from settings (values are validated) --}}
+    <style id="theme-settings">{!! $themeCss !!}</style>
+@endif

@@ -135,4 +135,13 @@ return [
 
     // Footer
     'rights' => 'All rights reserved.',
+    'crafted_by' => 'Crafted with',
+    'crafted_by_team' => 'by the Digital Transformation Department',
+
+    // ERP navigation
+    'nav' => [
+        'main' => 'Main',
+        'branch' => 'Branch',
+        'all_my_branches' => 'All my branches',
+    ],
 ];
