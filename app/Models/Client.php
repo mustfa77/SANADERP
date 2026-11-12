@@ -6,6 +6,7 @@ use App\Models\Concerns\BelongsToBranch;
 use App\Models\Concerns\HasActiveFlag;
 use App\Models\Concerns\HasDocuments;
 use App\Models\Concerns\HasTranslations;
+use App\Models\Scopes\BranchScope;
 use App\Services\Documents\DocumentOwner;
 use App\Support\IdentifierHash;
 use Database\Factories\ClientFactory;
@@ -14,11 +15,12 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * Client file (sponsor / renter). Branch scoped. The national ID is
- * encrypted and its HMAC lookup is kept in step automatically. visa_balance
- * is managed by the recruitment module, not by the client form.
+ * encrypted and its HMAC lookup is kept in step automatically. A client may
+ * have any number of recruitment orders, each with its own visa.
  */
 #[Fillable([
     'name_ar', 'name_en', 'national_id', 'phone', 'phone2', 'email', 'city', 'district',
@@ -36,7 +38,6 @@ class Client extends Model implements DocumentOwner
     {
         return [
             'national_id' => 'encrypted',
-            'visa_balance' => 'integer',
         ];
     }
 
@@ -66,6 +67,30 @@ class Client extends Model implements DocumentOwner
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /**
+     * @return HasMany<RecruitmentOrder, $this>
+     */
+    public function recruitmentOrders(): HasMany
+    {
+        return $this->hasMany(RecruitmentOrder::class)->withoutGlobalScope(BranchScope::class)->latest();
+    }
+
+    /**
+     * @return HasMany<RentalContract, $this>
+     */
+    public function rentalContracts(): HasMany
+    {
+        return $this->hasMany(RentalContract::class)->withoutGlobalScope(BranchScope::class)->latest('starts_at');
+    }
+
+    /**
+     * @return HasMany<HourlyBooking, $this>
+     */
+    public function hourlyBookings(): HasMany
+    {
+        return $this->hasMany(HourlyBooking::class)->withoutGlobalScope(BranchScope::class)->latest('starts_at');
     }
 
     /**

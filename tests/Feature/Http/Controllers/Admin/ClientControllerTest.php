@@ -44,7 +44,6 @@ class ClientControllerTest extends TestCase
 
         $client = Client::query()->sole();
         $this->assertSame('1012345678', $client->national_id);
-        $this->assertSame(0, $client->visa_balance);
         $this->assertDatabaseHas(AuditLog::class, ['action_key' => 'client.created', 'target_id' => $client->id]);
         $this->assertStringNotContainsString('1012345678', (string) json_encode(AuditLog::query()->pluck('new_values')));
     }

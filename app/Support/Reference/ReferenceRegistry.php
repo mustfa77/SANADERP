@@ -123,7 +123,14 @@ class ReferenceRegistry
                 model: Profession::class,
                 icon: 'ri-briefcase-line',
                 permissions: $settings,
-                fields: ['name' => $name],
+                fields: [
+                    'name' => $name,
+                    'cv_template' => [
+                        'type' => 'select', 'required' => true, 'list' => true,
+                        'options' => fn (): array => collect(array_keys(config('cv_templates')))
+                            ->mapWithKeys(fn (string $key): array => [$key => __("cv.templates.{$key}")])->all(),
+                    ],
+                ],
                 search: ['name_ar', 'name_en'],
             ),
             new ReferenceResource(

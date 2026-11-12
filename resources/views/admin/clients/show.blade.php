@@ -18,8 +18,8 @@
 
                     <div class="d-flex justify-content-around border-top mt-3 pt-3">
                         <div>
-                            <h5 class="mb-0">{{ $client->visa_balance }}</h5>
-                            <small class="text-muted">{{ __('clients.fields.visa_balance') }}</small>
+                            <h5 class="mb-0">{{ $client->recruitmentOrders()->count() }}</h5>
+                            <small class="text-muted">{{ __('recruitment.tabs.client') }}</small>
                         </div>
                     </div>
 

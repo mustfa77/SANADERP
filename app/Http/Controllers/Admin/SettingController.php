@@ -8,6 +8,7 @@ use App\Http\Requests\Admin\UpdateAppearanceSettingsRequest;
 use App\Http\Requests\Admin\UpdateGeneralSettingsRequest;
 use App\Http\Requests\Admin\UpdateMailSettingsRequest;
 use App\Http\Requests\Admin\UpdateMaintenanceSettingsRequest;
+use App\Http\Requests\Admin\UpdateRecruitmentSettingsRequest;
 use App\Http\Requests\Admin\UpdateSecuritySettingsRequest;
 use App\Models\Setting;
 use App\Notifications\TestMail;
@@ -50,6 +51,8 @@ class SettingController extends Controller
             'maintenanceDefinitions' => Setting::MAINTENANCE,
             'alerts' => collect(Setting::ALERTS)->map(fn (array $definition, string $key): int => Setting::integer($key))->all(),
             'alertDefinitions' => Setting::ALERTS,
+            'recruitment' => collect(Setting::RECRUITMENT)->map(fn (array $definition, string $key): int => Setting::integer($key))->all(),
+            'recruitmentDefinitions' => Setting::RECRUITMENT,
             'backups' => $this->backups->all(),
         ]);
     }
@@ -161,6 +164,14 @@ class SettingController extends Controller
         $this->audited($this->saveValues($values), 'alerts');
 
         return redirect()->route('admin.settings.edit', ['tab' => 'alerts'])->with('success', __('settings.flash.updated'));
+    }
+
+    public function updateRecruitment(UpdateRecruitmentSettingsRequest $request): RedirectResponse
+    {
+        $values = collect(Setting::RECRUITMENT)->keys()->mapWithKeys(fn (string $key): array => [$key => (string) $request->integer($key)])->all();
+        $this->audited($this->saveValues($values), 'recruitment');
+
+        return redirect()->route('admin.settings.edit', ['tab' => 'recruitment'])->with('success', __('settings.flash.updated'));
     }
 
     public function updateSecurity(UpdateSecuritySettingsRequest $request): RedirectResponse

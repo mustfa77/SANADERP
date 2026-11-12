@@ -1,0 +1,75 @@
+<?php
+
+return [
+    'title' => 'Hourly bookings',
+    'create' => 'New hourly booking',
+    'show' => 'Hourly booking :number',
+    'save' => 'Save booking',
+    'today' => 'Today',
+    'from' => 'From',
+    'to' => 'To',
+    'hours' => 'hours',
+    'move_time' => 'Pick-up time',
+    'search_placeholder' => 'Booking no., client or worker...',
+    'bookings_count' => '{1} 1 booking|[2,*] :count bookings',
+    'total_for_days' => '× :count days = :total',
+    'none' => 'No hourly bookings.',
+    'none_in_period' => 'No bookings in this period.',
+    'payable' => 'Booking :number',
+    'confirm_cancel' => 'The booking is cancelled and the worker is free at this time again.',
+    'late' => 'Late :minutes min',
+    'refund_reason' => 'Booking :number cancelled',
+
+    'hints' => [
+        'create' => 'One booking = one worker, one date and one shift. To book several consecutive days at once, set the number of days.',
+        'workers' => 'Workers in hourly rental ("Workers for rent" page), available, from a country with an hourly price (Settings > Prices).',
+        'rate' => 'Leave empty to use the hourly price of the worker\'s country. Price = hourly price × shift hours.',
+        'discount' => 'Per booking, before VAT.',
+        'days' => 'Consecutive days from the date (one booking per day).',
+        'no_prices' => 'No country has an active hourly price yet: add one in Settings > Prices.',
+        'no_workers' => 'No worker can be booked by the hour now. Add workers to hourly rental from "Workers for rent".',
+        'complete' => 'Record when the worker left and came back. A return after the end of the shift is shown as a delay.',
+        'cancel_refund' => 'Sent to finance for approval. 0 = no refund.',
+    ],
+
+    'fields' => [
+        'number' => 'Booking no.',
+        'client_id' => 'Client',
+        'worker_id' => 'Worker',
+        'shift_id' => 'Shift',
+        'date' => 'Date',
+        'days' => 'Number of days',
+        'hourly_price' => 'Hourly price',
+        'discount' => 'Discount',
+        'vat_amount' => 'VAT',
+        'total' => 'Total',
+        'address' => 'Address / location',
+        'notes' => 'Notes',
+        'status' => 'Status',
+        'cancel_reason_id' => 'Cancel reason',
+        'cancel_note' => 'Cancel note',
+        'departed_at' => 'Departure (date and time)',
+        'returned_at' => 'Return (date and time)',
+        'created_by' => 'Created by',
+    ],
+
+    'statuses' => [
+        'booked' => 'Booked',
+        'completed' => 'Completed',
+        'cancelled' => 'Cancelled',
+    ],
+
+    'actions' => [
+        'complete' => 'Worker returned (complete)',
+        'depart' => 'Record departure',
+        'update_departure' => 'Update departure',
+        'cancel' => 'Cancel booking',
+    ],
+
+    'flash' => [
+        'created' => '{1} Booking created.|[2,*] :count bookings created.',
+        'completed' => 'Booking completed.',
+        'departed' => 'Departure recorded.',
+        'cancelled' => 'Booking cancelled.',
+    ],
+];

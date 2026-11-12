@@ -38,7 +38,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class WorkerController extends Controller
 {
-    private const FILTERS = ['search', 'passport', 'iqama', 'status', 'country_id', 'profession_id', 'agency_id', 'branch_id', 'camp_id', 'sponsor_type', 'rental_type'];
+    private const FILTERS = ['search', 'passport', 'iqama', 'group', 'status', 'country_id', 'profession_id', 'agency_id', 'branch_id', 'camp_id', 'sponsor_type', 'rental_type'];
 
     private const PHOTO_DIRECTORY = 'worker-photos';
 
@@ -84,7 +84,7 @@ class WorkerController extends Controller
 
     public function show(Request $request, Worker $worker): View
     {
-        $worker->load(['country', 'profession', 'agency', 'branch', 'camp', 'creator', 'salaryChanges.changer', 'statusHistory.changer']);
+        $worker->load(['country', 'profession', 'agency', 'branch', 'camp', 'creator', 'experiences', 'salaryChanges.changer', 'statusHistory.changer']);
         $tabs = ProfileTabs::for('worker', $request->user());
 
         return view('admin.workers.show', [
@@ -92,6 +92,7 @@ class WorkerController extends Controller
             'tabs' => $tabs,
             'activeTab' => ProfileTabs::active($tabs, $request->query('tab')),
             'manualTransitions' => $this->statuses->manualTransitions($worker),
+            'reviewTransitions' => $this->statuses->reviewTransitions($worker),
             'authorities' => Authority::query()->active()->where('country_id', $worker->country_id)->orderBy('name_'.app()->getLocale())->get(),
             'lookups' => Lookup::query()->whereIn('id', [...($worker->languages ?? []), ...($worker->skills ?? [])])->get()->keyBy('id'),
         ]);
@@ -211,9 +212,16 @@ class WorkerController extends Controller
         return Worker::query()
             ->when($filters['search'] ?? null, fn (Builder $query, string $search) => $query->where(fn (Builder $q) => $q
                 ->where('name_en', 'like', "%{$search}%")
-                ->orWhere('name_ar', 'like', "%{$search}%")))
+                ->orWhere('name_ar', 'like', "%{$search}%")
+                ->orWhere('cv_reference_no', 'like', "%{$search}%")
+                // Worker number "W-0004" (or just 4).
+                ->when(preg_match('/^(?:W-?)?0*(\d+)$/i', trim($search), $number), fn (Builder $byNumber) => $byNumber->orWhereKey((int) $number[1]))))
             ->when($filters['passport'] ?? null, fn (Builder $query, string $passport) => $query->whereIdentifier('passport', $passport))
             ->when($filters['iqama'] ?? null, fn (Builder $query, string $iqama) => $query->whereIdentifier('iqama', $iqama))
+            ->when($filters['group'] ?? null, fn (Builder $query, string $group) => $query->whereIn(
+                'status',
+                array_map(fn (WorkerStatus $status): string => $status->value, WorkerStatus::grouped()[$group] ?? []),
+            ))
             ->tap(function (Builder $query) use ($filters): void {
                 foreach (['status', 'country_id', 'profession_id', 'agency_id', 'branch_id', 'camp_id', 'sponsor_type', 'rental_type'] as $column) {
                     if (filled($filters[$column] ?? null)) {

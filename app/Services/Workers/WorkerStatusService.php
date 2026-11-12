@@ -109,6 +109,26 @@ class WorkerStatusService
     }
 
     /**
+     * Allowed candidate review transitions (workflow.review), only while the
+     * candidate is being screened (before selection for an order).
+     *
+     * @return list<WorkerStatus>
+     */
+    public function reviewTransitions(Worker $worker): array
+    {
+        $screening = [WorkerStatus::CandidateNew, WorkerStatus::UnderReview, WorkerStatus::Rejected];
+
+        if (! in_array($worker->status, $screening, true)) {
+            return [];
+        }
+
+        return array_values(array_filter(
+            $this->allowedTransitions($worker),
+            fn (WorkerStatus $to): bool => in_array($to->value, config('workflow.review'), true),
+        ));
+    }
+
+    /**
      * @throws InvalidStatusTransition
      */
     private function guard(Worker $worker, WorkerStatus $to): void

@@ -16,10 +16,11 @@
             collect($errorKeys)->contains(fn (string $key): bool => array_key_exists($key, $appearance)) => 'appearance',
             collect($errorKeys)->contains(fn (string $key): bool => array_key_exists($key, $maintenance)) => 'maintenance',
             collect($errorKeys)->contains(fn (string $key): bool => array_key_exists($key, $alertDefinitions)) => 'alerts',
+            collect($errorKeys)->contains(fn (string $key): bool => array_key_exists($key, $recruitmentDefinitions)) => 'recruitment',
             $errorKeys !== [] => 'general',
             default => null,
         };
-        $tabs = ['general' => 'ri-global-line', 'appearance' => 'ri-palette-line', 'mail' => 'ri-mail-settings-line', 'security' => 'ri-shield-keyhole-line', 'maintenance' => 'ri-database-2-line', 'alerts' => 'ri-alarm-warning-line'];
+        $tabs = ['general' => 'ri-global-line', 'appearance' => 'ri-palette-line', 'mail' => 'ri-mail-settings-line', 'security' => 'ri-shield-keyhole-line', 'maintenance' => 'ri-database-2-line', 'alerts' => 'ri-alarm-warning-line', 'recruitment' => 'ri-flight-land-line'];
         $canManageAlerts = auth()->user()->can('settings.manage');
         $activeTab = $tabFromErrors ?? (array_key_exists((string) request('tab'), $tabs) ? request('tab') : 'general');
         $presetColors = ['#0bb197', '#3b5de7', '#6f42c1', '#e83e8c', '#f46a6a', '#fd7e14', '#f1b44c', '#1f9d55', '#0f6e59', '#343a40'];
@@ -291,6 +292,34 @@
                                         @error($key) <div class="invalid-feedback">{{ $message }}</div> @enderror
                                     </div>
                                     <small class="text-muted d-block mt-1">{{ __('settings.alerts.fields.'.$key.'.help') }}</small>
+                                </div>
+                            @endforeach
+                        </div>
+                        @if ($canManageAlerts)
+                            <button type="submit" class="btn btn-primary">{{ __('common.save') }}</button>
+                        @endif
+                    </form>
+                </div>
+
+                {{-- Recruitment delivery fees and periods --}}
+                <div class="tab-pane @if ($activeTab === 'recruitment') active @endif" id="tab-recruitment" role="tabpanel">
+                    <p class="text-muted">{{ __('settings.recruitment.hint') }}</p>
+                    <form method="POST" action="{{ route('admin.settings.recruitment') }}" novalidate>
+                        @csrf
+                        @method('PUT')
+                        <div class="row">
+                            @foreach ($recruitmentDefinitions as $key => $definition)
+                                <div class="col-lg-6 mb-4">
+                                    <label class="form-label" for="{{ $key }}">{{ __('settings.recruitment.fields.'.$key.'.label') }}</label>
+                                    <div class="input-group">
+                                        <input type="number" name="{{ $key }}" id="{{ $key }}" dir="ltr"
+                                            min="{{ $definition['min'] }}" max="{{ $definition['max'] }}"
+                                            value="{{ old($key, $recruitment[$key]) }}" @disabled(! $canManageAlerts)
+                                            class="form-control @error($key) is-invalid @enderror">
+                                        <span class="input-group-text">{{ __('settings.recruitment.units.'.(str_ends_with($key, '_fee') ? 'sar' : 'days')) }}</span>
+                                        @error($key) <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                    </div>
+                                    <small class="text-muted d-block mt-1">{{ __('settings.recruitment.fields.'.$key.'.help') }}</small>
                                 </div>
                             @endforeach
                         </div>

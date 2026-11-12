@@ -50,10 +50,19 @@ class Lookup extends Model
     }
 
     /**
-     * Contracts and payments do not exist yet, so nothing references an item.
+     * In use when a recruitment order, rental contract or hourly booking was
+     * cancelled / returned / closed with it, or a payment used it.
      */
     public function isInUse(): bool
     {
-        return false;
+        $id = $this->getKey();
+
+        return RecruitmentOrder::query()->withoutGlobalScopes()
+            ->where(fn (Builder $query) => $query->where('cancel_reason_id', $id)->orWhere('return_reason_id', $id))
+            ->exists()
+            || RentalContract::query()->withoutGlobalScopes()->where('close_reason_id', $id)->exists()
+            || RentalContractWorker::query()->where('return_reason_id', $id)->exists()
+            || HourlyBooking::query()->withoutGlobalScopes()->where('cancel_reason_id', $id)->exists()
+            || Payment::query()->withoutGlobalScopes()->withTrashed()->where('payment_method_id', $id)->exists();
     }
 }

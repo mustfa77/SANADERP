@@ -5,7 +5,7 @@ return [
     'create' => 'Add worker',
     'edit' => 'Edit worker',
     'show' => 'Worker file',
-    'search_name' => 'Search by name...',
+    'search_name' => 'Name, worker no. or reference no...',
     'search_passport' => 'Passport no. (exact)',
     'search_iqama' => 'Iqama no. (exact)',
     'change_status' => 'Change status',
@@ -129,6 +129,17 @@ return [
         'open_existing' => 'Open worker file',
         'iqama_format' => 'The iqama number must be 10 digits starting with 2.',
         'salary_reason_required' => 'Enter the reason for the salary change.',
+    ],
+
+    'review' => [
+        'title' => 'Review candidate',
+        'reason_hint' => 'A reason is required to reject.',
+        'actions' => [
+            'under_review' => 'Start review',
+            'ready_for_selection' => 'Approve: ready for selection',
+            'rejected' => 'Reject',
+            'candidate_new' => 'Back to new candidate',
+        ],
     ],
 
     'flash' => [

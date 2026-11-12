@@ -19,3 +19,9 @@ Schedule::command('backup:run --scheduled')->hourly()->withoutOverlapping();
 | period in settings (0 = keep forever).
 */
 Schedule::command('model:prune')->dailyAt('03:30');
+
+/*
+| In-system alerts (expiries, contract / probation ends, overdue stages,
+| absences, trips without a driver...), recalculated every hour.
+*/
+Schedule::command('alerts:refresh')->hourly()->withoutOverlapping();

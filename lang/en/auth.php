@@ -26,6 +26,10 @@ return [
         'remember' => 'Remember me',
         'forgot' => 'Forgot your password?',
         'submit' => 'Log In',
+        'demo' => [
+            'title' => 'Demo account',
+            'fill' => 'Use demo account',
+        ],
     ],
 
     'logout' => 'Logout',

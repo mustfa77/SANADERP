@@ -31,10 +31,10 @@ class Shift extends Model
     }
 
     /**
-     * Hourly bookings do not exist yet, so nothing references a shift.
+     * In use once an hourly booking was made with it.
      */
     public function isInUse(): bool
     {
-        return false;
+        return HourlyBooking::query()->withoutGlobalScopes()->where('shift_id', $this->getKey())->exists();
     }
 }

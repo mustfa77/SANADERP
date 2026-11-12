@@ -25,7 +25,6 @@ return [
         'district' => 'District',
         'national_address' => 'National address',
         'branch_id' => 'Branch',
-        'visa_balance' => 'Visa balance',
         'notes' => 'Notes',
         'is_active' => 'Client is active',
         'created_by' => 'Added by',

@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use App\Enums\CvCategory;
 use App\Enums\Gender;
+use App\Enums\LanguageLevel;
 use App\Enums\MaritalStatus;
 use App\Enums\PassportType;
 use App\Enums\Religion;
@@ -12,6 +14,7 @@ use App\Enums\WorkerStatus;
 use App\Models\Concerns\BelongsToBranch;
 use App\Models\Concerns\HasDocuments;
 use App\Models\Concerns\HasTranslations;
+use App\Models\Scopes\BranchScope;
 use App\Services\Documents\DocumentOwner;
 use App\Support\IdentifierHash;
 use Closure;
@@ -80,6 +83,15 @@ class Worker extends Model implements DocumentOwner
             'languages' => 'array',
             'skills' => 'array',
             'experience_years' => 'integer',
+            'cv_category' => CvCategory::class,
+            'arabic_level' => LanguageLevel::class,
+            'english_level' => LanguageLevel::class,
+            'cv_skills' => 'array',
+            'cv_details' => 'array',
+            'children_count' => 'integer',
+            'height_cm' => 'integer',
+            'weight_kg' => 'integer',
+            'cv_updated_at' => 'datetime',
             'salary' => 'decimal:2',
         ];
     }
@@ -107,6 +119,22 @@ class Worker extends Model implements DocumentOwner
                 $worker->iqama_lookup = IdentifierHash::make($worker->iqama_no);
             }
         });
+
+        // Every change of housing is kept in the movements log (camps module).
+        static::saved(function (self $worker): void {
+            if ($worker->wasRecentlyCreated ? $worker->camp_id !== null : $worker->wasChanged('camp_id')) {
+                $from = $worker->wasRecentlyCreated ? null : $worker->getOriginal('camp_id');
+                CampMovement::record($worker, $from !== null ? (int) $from : null, $worker->camp_id !== null ? (int) $worker->camp_id : null);
+            }
+        });
+    }
+
+    /**
+     * @return HasMany<CampMovement, $this>
+     */
+    public function campMovements(): HasMany
+    {
+        return $this->hasMany(CampMovement::class)->withoutGlobalScopes()->latest('moved_at')->latest('id');
     }
 
     /**
@@ -193,6 +221,60 @@ class Worker extends Model implements DocumentOwner
     public function statusHistory(): HasMany
     {
         return $this->hasMany(WorkerStatusHistory::class)->latest('changed_at')->latest('id');
+    }
+
+    /**
+     * CV employment background, in display order.
+     *
+     * @return HasMany<WorkerExperience, $this>
+     */
+    public function experiences(): HasMany
+    {
+        return $this->hasMany(WorkerExperience::class)->orderBy('sort_order')->orderBy('id');
+    }
+
+    /**
+     * CV template of the worker's profession (config/cv_templates.php).
+     *
+     * @return array{skills: list<string>, fields: array<string, array<string, mixed>>}
+     */
+    public function cvTemplate(): array
+    {
+        $key = $this->profession?->cv_template ?? 'housemaid';
+
+        return config("cv_templates.{$key}") ?? config('cv_templates.housemaid');
+    }
+
+    /**
+     * Worker number shown to staff and used in searches.
+     */
+    public function number(): string
+    {
+        return 'W-'.str_pad((string) $this->getKey(), 4, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * @return HasMany<RecruitmentOrder, $this>
+     */
+    public function recruitmentOrders(): HasMany
+    {
+        return $this->hasMany(RecruitmentOrder::class)->withoutGlobalScope(BranchScope::class)->latest();
+    }
+
+    /**
+     * @return HasMany<RentalContract, $this>
+     */
+    public function rentalContracts(): HasMany
+    {
+        return $this->hasMany(RentalContract::class)->withoutGlobalScope(BranchScope::class)->latest('starts_at');
+    }
+
+    /**
+     * @return HasMany<HourlyBooking, $this>
+     */
+    public function hourlyBookings(): HasMany
+    {
+        return $this->hasMany(HourlyBooking::class)->withoutGlobalScope(BranchScope::class)->latest('starts_at');
     }
 
     public function documentCountryId(): ?int

@@ -164,16 +164,16 @@ All 28 migrations have run on the dev DB (batches 1–3). Abbreviations: `str(n)
 |---|---|---|
 | 1 | Foundation | **DONE** |
 | 2 | Settings + documents engine | **DONE** (hooks for later modules are deferred on purpose) |
-| 3 | Workers, clients, status engine | **PARTIAL** (groundwork only, about 5%) |
-| 4 | Recruitment | **NOT STARTED** (groundwork only) |
-| 5 | Monthly rental & finance | **NOT STARTED** |
-| 6 | Camps (movements, daily count) | **NOT STARTED** (camp master list exists in Settings) |
-| 7 | Hourly rental | **NOT STARTED** (shifts/prices exist) |
-| 8 | Transport & driver app | **PARTIAL** (stub) |
-| 9 | Returns, transfer, deportation (cases) | **NOT STARTED** |
+| 3 | Workers, clients, status engine | **DONE** (commit a90b804; see the note under module 4 for the CV) |
+| 4 | Recruitment | **DONE (core flow)**, uncommitted: orders → delivery → probation, CV, follow-up page. Deferred: interviews, correction requests, tickets, website requests |
+| 5 | Monthly rental & finance | **PARTIAL** (uncommitted): monthly contracts (replace, early return, cancel), payments with receipts, refunds, rental reports done; invoices (Wafeq) and general financial reports not started |
+| 6 | Camps (movements, daily count) | **DONE (core)**, uncommitted: movements log + daily roll-call |
+| 7 | Hourly rental | **DONE (core)**, uncommitted: hourly bookings with overlap check and payments. Transport (driver trips) not linked yet |
+| 8 | Transport & driver app | **DONE (core)**, uncommitted: drivers, trips (automatic + manual), driver portal |
+| 9 | Returns, transfer, deportation (cases) | **DONE (core)**, uncommitted |
 | 10 | Agency portal | **PARTIAL** |
 | 11 | Public website & client portal | **NOT STARTED** |
-| 12 | Alerts & messaging | **NOT STARTED** (alert settings exist) |
+| 12 | Alerts & messaging | **PARTIAL**, uncommitted: in-system alerts + bell; no e-mail / WhatsApp |
 | 13 | Reports & dashboard | **PARTIAL** (dashboard UI with demo data) |
 | 14 | Data migration from Excel | **NOT STARTED** |
 
@@ -192,23 +192,47 @@ All 28 migrations have run on the dev DB (batches 1–3). Abbreviations: `str(n)
 - Exists: stub `workers` table/model (`Worker` with `BelongsToBranch`, `HasTranslations`; no controller, views or routes), `WorkerFactory`, masking service `SensitiveData` + `<x-sensitive>` with `workers.view_sensitive` / `clients.view_sensitive`, permissions `workers.*` and `clients.*`.
 - Missing: workers screens/CRUD, worker fields (status, country_id, profession_id, dates, photo...), **clients table/model/screens**, `WorkerStatusService`, workflow/transitions config, status history table, profile tabs config, worker as document owner.
 
-**4. Recruitment: NOT STARTED.** Groundwork only: stub `candidates` table/model (agency_id, names, nationality, passport, status string), `CandidateFactory`, Candidate as document owner, travel stages config, `hold_duration_hours` setting, `CompletedVisasProvider` interface, permissions `recruitment.*` and `candidates.*` (incl. `candidates.approve`). Missing: everything listed in the module (intake, review checklist, interviews, correction requests, approval, holds, recruitment requests, travel stage tracking, upcoming candidates list, completed visas, tickets, arrival, delivery, probation).
+**4. Recruitment: DONE (core flow), 2026-11-12, not committed yet.**
+- Orders (`RecruitmentOrderController`, `RecruitmentService`, number `RQ-YYYY-0001`, BranchScope). Statuses (`RecruitmentStatus`): new → candidate_selected → contracted (visa no. + Musaned contract, one visa per order) → in_travel (country stages) → arrived → delivered (probation) → completed / returned; cancel before the contract. The worker status follows through `WorkerStatusService`.
+- New order screen: existing or walk-in client (`ClientRegistrar`) and a searchable worker selection. "Direct order" button in the candidates list and the worker profile.
+- Arrival: the worker is housed in an active camp of the order's branch (capacity checked), or none.
+- Delivery: office pickup or home delivery. Fees come from Settings > Recruitment (`Setting::RECRUITMENT`: home delivery fee 120, free camp days, daily camp fee, probation days) and can be changed or waived. Receiver name/phone, notes and `delivered_by` are recorded. The worker leaves the camp and goes delivered → in_probation. Handover report PDF (`RecruitmentHandoverPdf`, draft before delivery).
+- Probation: complete (worker probation_completed, order completed) or return with a `return_reason` lookup (worker awaiting_decision, or absconded).
+- Follow-up page `admin/recruitment/follow-up`: overdue stages, arrived workers waiting for delivery (with the camp fee so far), and probations ending within `days_before_probation_end`.
+- Sidebar pages (`RecruitmentCandidateController`): "Ready candidates" `admin/recruitment/ready-candidates` (cards with photo, CV, documents progress, direct order) and "Documents" `admin/recruitment/documents` (required-document completeness of every worker from candidate_new to arrived, via `RecruitmentDocumentProgress`; links to the worker's documents tab to upload or print the authority file).
+- Worker CV per profession template (`config/cv_templates.php`), filled by staff or by the agency portal, printed as a PDF. `RecruitmentCompletedVisas` feeds the authority file.
+- Deferred: interviews, correction requests, tickets, website requests, invoices for delivery fees (module 5).
 
-**5. Monthly rental & finance: NOT STARTED.** Groundwork: `prices` (monthly/hourly, VAT), `LookupType::PaymentMethod`, permissions `rental_contracts.*`, `payments.*` (+verify), `invoices.*` (+issue, retry), `refunds.*` (+approve), `reports.view_financial`. No Wafeq, WhatsApp, invoice or report code.
+Original groundwork (before this module): stub `candidates` table/model (agency_id, names, nationality, passport, status string), `CandidateFactory`, Candidate as document owner, travel stages config, `hold_duration_hours` setting, `CompletedVisasProvider` interface, permissions `recruitment.*` and `candidates.*` (incl. `candidates.approve`). Missing: everything listed in the module (intake, review checklist, interviews, correction requests, approval, holds, recruitment requests, travel stage tracking, upcoming candidates list, completed visas, tickets, arrival, delivery, probation).
 
-**6. Camps: NOT STARTED.** The camp master list (branch, type, capacity) is in Settings. Missing: camp movements, daily count. `Camp::isInUse()` returns `false`.
+**5. Monthly rental & finance: PARTIAL (2026-11-12, uncommitted).**
+- Monthly contracts (`RentalContractController`, `RentalContractService`, `rental_contracts`, number `MR-YYYY-0001`, BranchScope): one month per contract (end = start + 1 month − 1 day); renewal creates the next month's contract (`renewed_from_id`, old one "renewed"); close = worker returned ("ended" on/after the end date, "terminated" before it, reason from `return_reason` lookups), optional return housing. Eligible workers: available + company sponsorship + rental_type monthly, same branch as the client. Price = active monthly price of the worker's country (editable) − discount + VAT. Worker status: available ↔ rented_monthly through `WorkerStatusService`. Contract PDF (`rental.contract-pdf`). "Ending soon" filter uses `days_before_contract_end`.
+- Payments (`PaymentController`, `PaymentService`, `payments` morph to contracts and hourly bookings): amount ≤ balance, method from `payment_method` lookups, transfer receipt on the private disk (served by `payments.receipt`), verify (`payments.verify`), remove only when unverified (`payments.delete`). Payment status (unpaid / partial / paid) is computed.
+- Profile tab "Rental" on workers and clients (`admin.rental.tabs.history`).
+- "Workers for rent" page (`RentalWorkerController`, `RentalWorkerService`): tabs monthly / hourly / not in rental; one-click add/remove of the worker's rental type (audited `worker.rental_type_changed`; blocked while rented or with upcoming bookings; hourly only for countries with an hourly price) and direct contract / booking buttons.
+- Rental calendar (`RentalCalendarController`, FullCalendar 6 from `public/assets/libs`): hourly bookings and contract start/end days, JSON feed `admin.rental.calendar.events`, click a day to book.
+- Rental reports (`RentalReportController`, `RentalReportService`, `reports.view`; amounts only with `reports.view_financial`): operations, billed / collected / verified, by payment method, collected per day (ApexCharts), outstanding balances, hourly and monthly worker utilisation.
+- Departure / return with date and time: monthly in `rental_contract_workers` (one row per worker period), hourly in `hourly_bookings.departed_at/returned_at` (delay shown, no extra charge).
+- Replacement: same contract, the current worker returns and another eligible worker goes out (`RentalContractService::replace`).
+- Early return: used days charged (return before `config('rental.return_cutoff_hour')` = 17:00 does not count that day) → `final_total`; cancel → `final_total` 0. Refund requests (`refunds`, `RefundService`, `RefundController`, menu Finance > Refunds) approved / rejected with `refunds.approve`; approved refunds reduce the amount paid.
+- Demo data: `php artisan db:seed --class=RecruitmentDemoSeeder` (recruitment, one order per step per branch) and `php artisan db:seed --class=RentalDemoSeeder` (local/testing only; skipped when rental data exists).
+- Missing: invoices / Wafeq, refunds, financial reports. Note: the default `rental_team` role has no `payments.*`; `accounts` cannot delete payments.
 
-**7. Hourly rental: NOT STARTED.** Shifts and hourly prices exist. `Shift::isInUse()` returns `false`.
+Original groundwork: `prices` (monthly/hourly, VAT), `LookupType::PaymentMethod`, permissions `rental_contracts.*`, `payments.*` (+verify), `invoices.*` (+issue, retry), `refunds.*` (+approve), `reports.view_financial`. No Wafeq, WhatsApp, invoice or report code.
 
-**8. Transport & driver app: PARTIAL (stub).** Stub `trips` table/model (branch, driver_id, scheduled_at, status), `driver` user type, driver portal page `GET /driver/trips` (read-only list of own trips, `DriverPortalController`). Missing: trip creation/assignment, drivers management, status flow, driver actions.
+**6. Camps: DONE (core), 2026-11-12, uncommitted.** `CampController`, `CampService`. Every change of `workers.camp_id` is logged in `camp_movements` by the Worker model (`saved` event; note from `CampMovement::withNote()` or the status change reason), so arrivals, rentals, returns and manual moves are all recorded. Housing page (`admin/camps`): occupancy, workers inside, manual check-in / transfer / check-out (reason required; housed statuses only; capacity checked), daily roll-call (`camp_attendances`: present / absent / sick / outside, one row per worker and day), movements log (`admin/camps/movements`), worker profile tab "Housing". Permissions: `camps.view`, `camp_movements.view`, `camp_movements.create`.
 
-**9. Cases: NOT STARTED.** `LookupType::ReturnReason`, permissions `cases.*` (+decide).
+**7. Hourly rental: DONE (core), 2026-11-12, uncommitted.** `HourlyBookingController`, `HourlyBookingService`, `hourly_bookings` (number `HB-YYYY-0001`): one worker + date + shift; starts/ends copied from the shift; a worker is never booked at overlapping times; several consecutive days in one step (all or nothing). Only workers that are available, rental_type hourly, and from a country with an active hourly price (today only the Philippines, per the business) can be booked. Price = hourly price × shift hours − discount + VAT. Complete (after start) / cancel (cancel reason). The worker status does not change. Payments as in module 5. `Shift::isInUse()` checks bookings. Missing: driver trips for the shift's move time.
+
+**8. Transport & driver app: DONE (core), 2026-11-12, uncommitted.** `TripService`, `TripController` (`admin/trips`, day board, assign driver, start / complete / cancel, manual trips), `DriverController` (`admin/drivers`: creates a user of type driver + `driver_profiles` with vehicle and licence; must change password at first login). Automatic trips: hourly booking → drop-off at the shift's move time and return at the end (cancelled with the booking); recruitment home delivery → delivery trip. Driver portal (`/driver/trips`): own open trips with "on my way" / "done". Missing: GPS, trip costs, rental monthly drop-offs.
+
+**9. Cases: DONE (core), 2026-11-12, uncommitted.** `WorkerCaseService`, `WorkerCaseController` (`admin/cases`), `worker_cases` (CS-YYYY-0001) + `worker_case_notes`. A case opens automatically when a worker becomes `awaiting_decision` (`App\Listeners\OpenWorkerCase` on `WorkerStatusChanged`). Decision (`cases.decide`, e.g. general manager): sponsorship transfer (new sponsor client or name + ID, fee) → for_transfer → transferred; deportation (flight date, ticket cost) → for_deportation → deported; back to work → available (closed at once). Completing and follow-up notes need `cases.edit` (e.g. branch manager).
 
 **10. Agency portal: PARTIAL.** `external_agency` user type linked to `users.agency_id`; `GET /agency/candidates` (own candidates list) and `GET /agency/documents` (documents of own candidates, read-only list, no file links), `portal` layout, `AgencyPortalControllerTest`. Missing: candidate submission, uploads, correction responses and every write action.
 
 **11. Public website & client portal: NOT STARTED.** Only the `website_requests.*` permissions and a "soon" sidebar item.
 
-**12. Alerts & messaging: NOT STARTED.** Alert period settings and `alerts.*` permissions only. No notifications except 2FA code / test mail / password reset.
+**12. Alerts & messaging: PARTIAL, 2026-11-12, uncommitted.** In-system alerts only (no e-mail / WhatsApp, as decided): `AlertService`, `alerts` table, `php artisan alerts:refresh` scheduled hourly, page `admin/alerts` and the top-bar bell. Types: iqama / passport / medical expiry, contract end, probation end, overdue travel stage, hold time over, absent from housing, trip without driver, driver licence expiry, case waiting > 3 days. Periods from Settings > Alerts. One alert per subject and date; closes by itself when the cause is gone, or "handled" (`alerts.edit`). Each type is shown only to users with the subject's view permission.
 
 **13. Reports & dashboard: PARTIAL.** `DashboardController` + `dashboard.blade.php` (KPIs, monthly overview, nationalities, pipeline, alerts, branches, latest contracts). Every figure comes from `App\Support\DashboardDemoData` (fixed sample data); only the branch list is real. No reports.
 
