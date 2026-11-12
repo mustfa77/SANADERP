@@ -40,6 +40,7 @@ class DocumentChecklistService
 
         $types = DocumentType::query()
             ->withTrashed()
+            ->where('applies_to', $owner instanceof DocumentOwner ? $owner->documentSubject() : 'worker')
             ->applicableTo($countryId, $professionId)
             ->where(fn (Builder $query) => $query
                 ->where(fn (Builder $active) => $active->where('is_active', true)->whereNull('deleted_at'))

@@ -36,12 +36,12 @@ return [
             'website_requests' => null,
         ],
         'rental' => [
-            'clients' => null,
+            'clients' => ['view', 'create', 'edit', 'export', 'print'],
             'rental_contracts' => null,
             'hourly_bookings' => null,
         ],
         'operations' => [
-            'workers' => null,
+            'workers' => ['view', 'create', 'edit', 'export', 'print'],
             'camps' => null,
             'camp_movements' => null,
             'drivers' => null,
@@ -77,6 +77,7 @@ return [
         'invoices.retry',
         'refunds.approve',
         'cases.decide',
+        'workers.change_status',
         'workers.view_sensitive',
         'clients.view_sensitive',
         'reports.view_financial',

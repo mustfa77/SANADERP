@@ -44,6 +44,11 @@ class Candidate extends Model implements DocumentOwner
         return $this->translations('name');
     }
 
+    public function documentSubject(): string
+    {
+        return 'worker';
+    }
+
     /**
      * @return BelongsTo<Agency, $this>
      */

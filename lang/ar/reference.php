@@ -29,6 +29,12 @@ return [
     'country_documents_hint' => 'مستندات خاصة بهذه الدولة، تُضاف إلى المستندات العامة:',
     'global_document_types' => 'المستندات العامة (لكل الدول)',
     'global_document_types_hint' => 'تُطلب من كل المرشحات مهما كانت الدولة، قبل المستندات الخاصة بكل دولة.',
+    'global_document_types_hint_worker' => 'تُطلب من كل العمالة مهما كانت الدولة، قبل المستندات الخاصة بكل دولة.',
+    'global_document_types_hint_client' => 'تُطلب من كل العملاء.',
+    'subjects' => [
+        'worker' => 'العمالة',
+        'client' => 'العملاء',
+    ],
     'no_document_types' => 'لا توجد مستندات معرّفة.',
     'document_types_hint' => 'الترتيب هنا هو ترتيب شاشة الرفع وترتيب ملف الجهة المطبوع. إيقاف مستند يخفيه عن المرشحات الجدد فقط، والملفات المرفوعة تبقى.',
     'authority_hint' => 'اختياري: اربط المستند بجهة معينة ليُطلب فقط عند طباعة ملفها.',
@@ -78,6 +84,7 @@ return [
         'is_required' => 'إلزامي',
         'include_in_authority_file' => 'ضمن ملف الجهة',
         'is_active' => 'الحالة',
+        'applies_to' => 'يُطلب من',
     ],
 
     'camps' => [
@@ -100,6 +107,8 @@ return [
             'return_reason' => 'أسباب الإرجاع',
             'cancel_reason' => 'أسباب الإلغاء',
             'payment_method' => 'طرق الدفع',
+            'language' => 'اللغات',
+            'skill' => 'المهارات',
         ],
     ],
 

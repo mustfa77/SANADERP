@@ -36,10 +36,10 @@ class Camp extends Model
     }
 
     /**
-     * Camp movements do not exist yet, so nothing references a camp.
+     * In use while workers are housed in it.
      */
     public function isInUse(): bool
     {
-        return false;
+        return Worker::query()->withoutGlobalScopes()->where('camp_id', $this->getKey())->exists();
     }
 }

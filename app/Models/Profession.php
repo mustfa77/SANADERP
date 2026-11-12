@@ -28,6 +28,7 @@ class Profession extends Model
 
     public function isInUse(): bool
     {
-        return $this->documentTypes()->exists();
+        return $this->documentTypes()->exists()
+            || Worker::query()->withoutGlobalScopes()->where('profession_id', $this->getKey())->exists();
     }
 }

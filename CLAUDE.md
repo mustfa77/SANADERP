@@ -1,3 +1,85 @@
+# Sanad ERP: Project Rules
+
+Bilingual (Arabic/English, RTL/LTR) admin system for a Saudi domestic-worker recruitment and rental company with multiple branches.
+**Current status, module progress and known problems: [docs/PROJECT_STATUS.md](docs/PROJECT_STATUS.md). Read it before starting any task.**
+
+## Working rules (every task)
+1. Inspect first: read the related code, config, lang files and docs/PROJECT_STATUS.md.
+2. List your questions and assumptions before writing code. Ask; do not guess business rules.
+3. Work in small steps. Show the plan, then wait for confirmation before each step.
+4. Never modify modules unrelated to the task. Report problems you find; do not fix them silently.
+5. Every change comes with feature tests. Run the narrowest tests, then `vendor/bin/pint --dirty --format agent`.
+6. Update docs/PROJECT_STATUS.md when a module or step is completed.
+
+## Stack and commands
+- Laravel 13, PHP 8.3, SQLite (`database/database.sqlite`), spatie/laravel-permission 8, mpdf 8, spatie/simple-excel 3, PHPUnit 12.
+- PHP is not on PATH in the default shell. Use `C:\laragon\bin\php\php-8.3.36-Win32-vs16-x64\php.exe` (or add it to PATH).
+- UI: Upzet Bootstrap 5 template, static files in `public/assets` (RTL CSS loaded when `dir=rtl`). Do **not** use Tailwind/Vite in Blade, even though they are installed.
+- Run: `php artisan serve` (or Laragon). Setup: `php artisan migrate --seed` (needs `SUPER_ADMIN_*` in `.env`).
+- Tests: `php artisan test --compact` or `vendor/bin/phpunit` (SQLite in memory, never touches the dev DB).
+- Queue: `php artisan queue:work` (driver `database`). Scheduler: `php artisan schedule:work` (backup hourly check, `model:prune` 03:30).
+
+## Where code goes
+| Kind | Location |
+|---|---|
+| Admin controllers | `app/Http/Controllers/Admin` (portals: `Portal/`, auth: `Auth/`) |
+| Validation | FormRequest in `app/Http/Requests/Admin` (preferred for new screens) |
+| Business logic | `app/Services/{Module}/` (e.g. `Services/Documents`). Controllers stay thin |
+| Helpers / registries | `app/Support` |
+| Model traits / scopes | `app/Models/Concerns`, `app/Models/Scopes` |
+| Enums | `app/Enums` (string-backed, TitleCase cases, `label()` reading lang) |
+| Policies | `app/Policies` (auto-discovered) |
+| Views | `resources/views/admin/{module}/` (index, create, edit, show, `_form`), components in `resources/views/components` |
+| Config catalogues | `config/permissions.php`, `config/menu.php`, `config/documents.php` |
+| Translations | `lang/ar/{module}.php` + `lang/en/{module}.php` (same keys in both) |
+
+## Bilingual rules
+- Translatable columns are `{field}_ar` + `{field}_en`; the model uses `HasTranslations`. Read with `$model->trans('name')`, store both with `$model->translations('name')`.
+- No hard-coded UI text in Blade, controllers, enums or flash messages: always `__('module.key')`, with the key added to **both** `lang/ar` and `lang/en`.
+- Layouts already set `dir`/RTL CSS. Use `dir="ltr"` for codes, phones, emails, passport/iqama numbers. Use logical Bootstrap classes (`ms-`/`me-`, `text-start`/`text-end`).
+- Enum labels: `__("module.group.{$this->value}")`.
+
+## Permissions
+- Defined **only** in `config/permissions.php` (sections → modules → actions). Name format: `module.action` in snake_case (`workers.view`, `candidates.approve`). Extra actions go under `special`. Labels go in `lang/{ar,en}/permissions.php` (`modules`, `actions`, `special`).
+- After adding: `php artisan db:seed --class=PermissionSeeder`. Default role grants live in `config/permissions.php` `roles` (applied only when a role is first created).
+- Protect every route with middleware `can:perm` or `can:ability,model` (policy for model-specific rules). Protect Blade with `@can('perm')`. Never leave an admin route without a permission check.
+- Sidebar entries: `config/menu.php` (`route => null` shows "soon").
+- Settings screens: `settings.view` to see, `settings.manage` to change reference data. Do not add new uses of `settings.edit` until Q7 in PROJECT_STATUS.md is answered.
+
+## Branch scope
+- Every branch-owned table has a non-null `branch_id` FK, and its model uses `App\Models\Concerns\BelongsToBranch` (adds `BranchScope`). This gives a 404 on another branch's record through route model binding.
+- Use `withoutGlobalScope(BranchScope::class)` only with a written reason (e.g. counts on the Branch page, driver portal).
+- Branch pickers in forms list only `auth()->user()->allowedBranchIds()`.
+
+## Worker status
+- `WorkerStatusService` does not exist yet (Module 3). From now on, statuses are enums and change **only** through a status service. Allowed transitions are defined in `config/workflow.php`, and every change writes a status-history row and an audit entry. Never `update(['status' => ...])` directly.
+
+## Documents engine
+To attach it to a model:
+1. Implement `App\Services\Documents\DocumentOwner` (`documentCountryId()`, `documentProfessionId()`, `documentOwnerName()`) and `use HasDocuments`.
+2. Register an alias in `config/documents.php` `owners` with the model and the view permission it requires.
+3. Render `<x-documents.checklist :owner="$model" />` and `<x-documents.print-button :owner="$model" :authority="$id" />`.
+Files are stored only on the private `local` disk and served through `DocumentController` routes.
+
+## Profile tabs
+- No profile-tabs config exists yet. From now on, define tabs in `config/profile_tabs.php` (key, label key, view partial, permission) and render them from that config. Do not hard-code tabs in a view.
+
+## Audit log
+- Log every create/update/delete/status change: `app(AuditLogger::class)->log('module.action', $model, ['name' => $model->translations('name')], $old, $new)`.
+- Add `actions.{module.action}` and `action_names.{module.action}` to `lang/{ar,en}/audit.php`, plus `targets.{ModelClass}` for new targets.
+
+## Deleting
+- No hard deletes of business data: models use `SoftDeletes`. Refuse deletion when `isInUse()` and offer deactivation (`is_active` + `HasActiveFlag`).
+- When a new module references an existing table, update that model's `isInUse()` (e.g. `Camp`, `Shift`, `Lookup`, `Profession`, `Country`, `Branch::destroy`).
+
+## External integrations
+- Mail, WhatsApp, Wafeq and any other HTTP call run in queued jobs (`ShouldQueue`, retries, logged failures), never inline in a request. WhatsApp sending stays disabled until approved; manual `wa.me` links are allowed.
+
+## Money and dates
+- Money: `decimal(10,2)` columns with the `decimal:2` cast; VAT per record (default 15%). Dates use Carbon casts.
+
+---
+
 <laravel-boost-guidelines>
 === foundation rules ===
 

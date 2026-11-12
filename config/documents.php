@@ -1,6 +1,8 @@
 <?php
 
 use App\Models\Candidate;
+use App\Models\Client;
+use App\Models\Worker;
 
 return [
     /*
@@ -17,6 +19,8 @@ return [
     */
     'owners' => [
         'candidate' => ['model' => Candidate::class, 'permission' => 'candidates.view'],
+        'worker' => ['model' => Worker::class, 'permission' => 'workers.view'],
+        'client' => ['model' => Client::class, 'permission' => 'clients.view'],
     ],
 
     /*

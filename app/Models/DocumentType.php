@@ -19,7 +19,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * applies to all. Ordered per country (global types form their own list).
  */
 #[Fillable([
-    'country_id', 'profession_id', 'authority_id', 'name_ar', 'name_en', 'sort_order',
+    'applies_to', 'country_id', 'profession_id', 'authority_id', 'name_ar', 'name_en', 'sort_order',
     'is_required', 'include_in_authority_file', 'is_active',
 ])]
 class DocumentType extends Model
@@ -39,11 +39,23 @@ class DocumentType extends Model
     }
 
     /**
+     * Who the type is asked from: workers or clients.
+     */
+    public const SUBJECTS = ['worker', 'client'];
+
+    /**
+     * @var array<string, mixed>
+     */
+    protected $attributes = ['applies_to' => 'worker'];
+
+    /**
+     * Ordered per subject and country (global types form their own list).
+     *
      * @return list<string>
      */
     public function sortGroupColumns(): array
     {
-        return ['country_id'];
+        return ['applies_to', 'country_id'];
     }
 
     /**

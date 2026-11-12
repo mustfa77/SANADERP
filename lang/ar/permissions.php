@@ -79,7 +79,10 @@ return [
         ],
         'refunds' => ['approve' => 'اعتماد الاسترجاع'],
         'cases' => ['decide' => 'اتخاذ قرار الترحيل أو نقل الكفالة'],
-        'workers' => ['view_sensitive' => 'عرض رقم الجواز والإقامة'],
+        'workers' => [
+            'view_sensitive' => 'عرض رقم الجواز والإقامة',
+            'change_status' => 'تغيير حالة العامل',
+        ],
         'clients' => ['view_sensitive' => 'عرض رقم الهوية والعنوان الوطني'],
         'reports' => ['view_financial' => 'عرض التقارير المالية'],
         'branches' => ['all' => 'الوصول لكل الفروع'],

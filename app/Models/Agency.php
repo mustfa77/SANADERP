@@ -60,6 +60,8 @@ class Agency extends Model
 
     public function isInUse(): bool
     {
-        return $this->users()->exists() || $this->candidates()->exists();
+        return $this->users()->exists()
+            || $this->candidates()->exists()
+            || Worker::query()->withoutGlobalScopes()->where('agency_id', $this->getKey())->exists();
     }
 }

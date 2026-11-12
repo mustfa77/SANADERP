@@ -23,12 +23,12 @@ return [
         ['key' => 'website_requests', 'icon' => 'ri-global-line', 'route' => null, 'permission' => 'website_requests.view'],
     ],
     'rental' => [
-        ['key' => 'clients', 'icon' => 'ri-contacts-book-line', 'route' => null, 'permission' => 'clients.view'],
+        ['key' => 'clients', 'icon' => 'ri-contacts-book-line', 'route' => 'admin.clients.index', 'permission' => 'clients.view'],
         ['key' => 'rental_contracts', 'icon' => 'ri-file-paper-2-line', 'route' => null, 'permission' => 'rental_contracts.view'],
         ['key' => 'hourly_bookings', 'icon' => 'ri-time-line', 'route' => null, 'permission' => 'hourly_bookings.view'],
     ],
     'operations' => [
-        ['key' => 'workers', 'icon' => 'ri-team-line', 'route' => null, 'permission' => 'workers.view'],
+        ['key' => 'workers', 'icon' => 'ri-team-line', 'route' => 'admin.workers.index', 'permission' => 'workers.view'],
         ['key' => 'camp_movements', 'icon' => 'ri-arrow-left-right-line', 'route' => null, 'permission' => 'camp_movements.view'],
         ['key' => 'drivers', 'icon' => 'ri-steering-2-line', 'route' => null, 'permission' => 'drivers.view'],
         ['key' => 'trips', 'icon' => 'ri-bus-line', 'route' => null, 'permission' => 'trips.view'],

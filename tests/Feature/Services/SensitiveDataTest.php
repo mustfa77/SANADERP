@@ -30,7 +30,7 @@ class SensitiveDataTest extends TestCase
     {
         $this->actingAs($this->userWithRole('rental_team'));
 
-        $html = Blade::render('<x-sensitive :value="$value" permission="workers.view_sensitive" type="passport" />', ['value' => 'P0123456C']);
+        $html = Blade::render('<x-masked :value="$value" permission="workers.view_sensitive" type="passport" />', ['value' => 'P0123456C']);
 
         $this->assertStringContainsString('P01****6C', $html);
         $this->assertStringNotContainsString('P0123456C', $html);
@@ -40,7 +40,7 @@ class SensitiveDataTest extends TestCase
     {
         $this->actingAs($this->userWithRole('general_manager'));
 
-        $html = Blade::render('<x-sensitive :value="$value" permission="workers.view_sensitive" type="passport" />', ['value' => 'P0123456C']);
+        $html = Blade::render('<x-masked :value="$value" permission="workers.view_sensitive" type="passport" />', ['value' => 'P0123456C']);
 
         $this->assertStringContainsString('P0123456C', $html);
     }

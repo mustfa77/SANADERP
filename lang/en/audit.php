@@ -40,6 +40,8 @@ return [
         'DocumentType' => 'Document type',
         'Document' => 'Document',
         'Candidate' => 'Candidate',
+        'Worker' => 'Worker',
+        'Client' => 'Client',
     ],
 
     /*
@@ -99,6 +101,15 @@ return [
             'activated' => 'Document type activated',
             'deactivated' => 'Document type deactivated',
             'deleted' => 'Document type deleted',
+        ],
+        'worker' => [
+            'created' => 'Worker added',
+            'updated' => 'Worker updated',
+            'status_changed' => 'Worker status changed',
+        ],
+        'client' => [
+            'created' => 'Client added',
+            'updated' => 'Client updated',
         ],
         'document' => [
             'uploaded' => 'Document uploaded',
@@ -183,6 +194,15 @@ return [
             'activated' => 'Document ":name" (:country) was activated',
             'deactivated' => 'Document ":name" (:country) was deactivated',
             'deleted' => 'Document ":name" (:country) was deleted',
+        ],
+        'worker' => [
+            'created' => 'Worker :name was added',
+            'updated' => 'Worker :name was updated',
+            'status_changed' => 'Status of :name changed from ":from" to ":to"',
+        ],
+        'client' => [
+            'created' => 'Client :name was added',
+            'updated' => 'Client :name was updated',
         ],
         'document' => [
             'uploaded' => 'Document ":name" was uploaded',

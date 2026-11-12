@@ -75,7 +75,8 @@ class Country extends Model
      */
     public function isInUse(): bool
     {
-        return $this->agencies()->exists()
+        return Worker::query()->withoutGlobalScopes()->where('country_id', $this->getKey())->exists()
+            || $this->agencies()->exists()
             || $this->authorities()->exists()
             || $this->prices()->exists()
             || DocumentType::query()->where('country_id', $this->getKey())->exists();

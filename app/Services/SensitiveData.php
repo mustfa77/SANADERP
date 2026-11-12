@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Auth;
 /**
  * Masks sensitive identifiers (passport, iqama, national id, address) for
  * users without the matching "*.view_sensitive" permission. Used by the
- * <x-sensitive> Blade component and by exports / prints.
+ * <x-masked> Blade component and by exports / prints.
  */
 class SensitiveData
 {

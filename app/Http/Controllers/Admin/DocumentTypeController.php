@@ -21,28 +21,32 @@ use Illuminate\View\View;
 class DocumentTypeController extends Controller
 {
     private const AUDITED_FIELDS = [
-        'country_id', 'profession_id', 'authority_id', 'name_ar', 'name_en',
+        'applies_to', 'country_id', 'profession_id', 'authority_id', 'name_ar', 'name_en',
         'is_required', 'include_in_authority_file', 'is_active',
     ];
 
     public function __construct(private AuditLogger $audit) {}
 
     /**
-     * Global document types (no country).
+     * Global document types (no country), one tab per subject (workers / clients).
      */
-    public function index(): View
+    public function index(Request $request): View
     {
+        $subject = $this->subject($request->query('subject'));
+
         return view('admin.reference.document-types.index', [
-            'documentTypes' => DocumentType::query()->whereNull('country_id')->with(['profession', 'authority'])->ordered()->get(),
+            'subject' => $subject,
+            'documentTypes' => DocumentType::query()->where('applies_to', $subject)->whereNull('country_id')->with(['profession', 'authority'])->ordered()->get(),
         ]);
     }
 
     public function create(Request $request): View
     {
         $country = $request->filled('country') ? Country::query()->findOrFail($request->integer('country')) : null;
+        $subject = $country ? 'worker' : $this->subject($request->query('subject'));
 
         return view('admin.reference.document-types.form', [
-            'documentType' => new DocumentType(['country_id' => $country?->id, 'is_active' => true]),
+            'documentType' => new DocumentType(['applies_to' => $subject, 'country_id' => $country?->id, 'is_active' => true]),
             ...$this->formOptions($country),
         ]);
     }
@@ -135,18 +139,33 @@ class DocumentTypeController extends Controller
     private function validated(Request $request, ?DocumentType $documentType): array
     {
         $validated = $request->validate([
+            'applies_to' => [$documentType ? 'prohibited' : 'nullable', Rule::in(DocumentType::SUBJECTS)],
             'country_id' => [$documentType ? 'prohibited' : 'nullable', Rule::exists('countries', 'id')->whereNull('deleted_at')],
             'profession_id' => ['nullable', Rule::exists('professions', 'id')->whereNull('deleted_at')],
             'authority_id' => ['nullable', Rule::exists('authorities', 'id')->whereNull('deleted_at')],
             'name_ar' => ['required', 'string', 'max:255'],
             'name_en' => ['required', 'string', 'max:255'],
         ], [], [
+            'applies_to' => __('reference.fields.applies_to'),
             'country_id' => __('reference.fields.country_id'),
             'profession_id' => __('reference.fields.profession_id'),
             'authority_id' => __('reference.fields.authority_id'),
             'name_ar' => __('reference.field_in_language.ar', ['field' => __('reference.fields.name')]),
             'name_en' => __('reference.field_in_language.en', ['field' => __('reference.fields.name')]),
         ]);
+
+        if (! $documentType) {
+            $validated['applies_to'] ??= 'worker';
+        }
+
+        // Client documents are general: no country, profession or authority.
+        if (($validated['applies_to'] ?? $documentType?->applies_to) === 'client') {
+            $validated = [...$validated, 'country_id' => null, 'profession_id' => null, 'authority_id' => null];
+
+            if ($documentType) {
+                unset($validated['country_id']);
+            }
+        }
 
         return [
             ...$validated,
@@ -167,11 +186,16 @@ class DocumentTypeController extends Controller
         ];
     }
 
+    private function subject(mixed $requested): string
+    {
+        return in_array($requested, DocumentType::SUBJECTS, true) ? $requested : 'worker';
+    }
+
     private function backToList(DocumentType $documentType, ?string $message = null): RedirectResponse
     {
         $redirect = $documentType->country_id
             ? redirect()->route('admin.countries.show', [$documentType->country_id, 'tab' => 'documents'])
-            : redirect()->route('admin.document-types.index');
+            : redirect()->route('admin.document-types.index', ['subject' => $documentType->applies_to]);
 
         return $message ? $redirect->with('success', __($message, ['item' => __('reference.resources.document_types.singular')])) : $redirect;
     }

@@ -21,7 +21,7 @@ class CountryController extends Controller
         return view('admin.reference.countries.show', [
             'country' => $country->loadCount(['agencies', 'authorities']),
             'stages' => $country->travelStages()->get(),
-            'documentTypes' => DocumentType::query()->where('country_id', $country->id)->with(['profession', 'authority'])->ordered()->get(),
+            'documentTypes' => DocumentType::query()->where('applies_to', 'worker')->where('country_id', $country->id)->with(['profession', 'authority'])->ordered()->get(),
             'tab' => $tab,
         ]);
     }

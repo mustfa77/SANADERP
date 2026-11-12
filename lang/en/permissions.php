@@ -79,7 +79,10 @@ return [
         ],
         'refunds' => ['approve' => 'Approve refund'],
         'cases' => ['decide' => 'Decide deportation or sponsorship transfer'],
-        'workers' => ['view_sensitive' => 'View passport and iqama numbers'],
+        'workers' => [
+            'view_sensitive' => 'View passport and iqama numbers',
+            'change_status' => 'Change worker status',
+        ],
         'clients' => ['view_sensitive' => 'View national ID and national address'],
         'reports' => ['view_financial' => 'View financial reports'],
         'branches' => ['all' => 'Access all branches'],

@@ -3,7 +3,7 @@
 @php
     $singular = __('reference.resources.document_types.singular');
     $title = $documentType->exists ? __('reference.edit', ['item' => $singular]) : __('reference.add', ['item' => $singular]);
-    $backUrl = $country ? route('admin.countries.show', [$country, 'tab' => 'documents']) : route('admin.document-types.index');
+    $backUrl = $country ? route('admin.countries.show', [$country, 'tab' => 'documents']) : route('admin.document-types.index', ['subject' => $documentType->applies_to]);
 @endphp
 
 @section('title', $title)
@@ -17,15 +17,27 @@
         @csrf
         @if ($documentType->exists)
             @method('PUT')
-        @elseif ($country)
-            <input type="hidden" name="country_id" value="{{ $country->id }}">
+        @else
+            <input type="hidden" name="applies_to" value="{{ $documentType->applies_to }}">
+            @if ($country)
+                <input type="hidden" name="country_id" value="{{ $country->id }}">
+            @endif
         @endif
+
+        @php
+            $forWorkers = $documentType->applies_to !== 'client';
+        @endphp
 
         <div class="card">
             <div class="card-body">
                 <div class="alert alert-light border mb-4">
-                    <i class="ri-earth-line me-1"></i>{{ __('reference.fields.country_id') }}:
-                    <strong>{{ $country?->trans('name') ?? __('reference.all_countries') }}</strong>
+                    <i class="ri-user-line me-1"></i>{{ __('reference.fields.applies_to') }}:
+                    <strong>{{ __('reference.subjects.'.$documentType->applies_to) }}</strong>
+                    @if ($forWorkers)
+                        <span class="mx-2">·</span>
+                        <i class="ri-earth-line me-1"></i>{{ __('reference.fields.country_id') }}:
+                        <strong>{{ $country?->trans('name') ?? __('reference.all_countries') }}</strong>
+                    @endif
                 </div>
 
                 <div class="row">
@@ -38,6 +50,7 @@
                         </div>
                     @endforeach
 
+                    @if ($forWorkers)
                     <div class="col-md-6 mb-3">
                         <label class="form-label" for="profession_id">{{ __('reference.fields.profession_id') }}</label>
                         <select name="profession_id" id="profession_id" class="form-select @error('profession_id') is-invalid @enderror">
@@ -59,6 +72,7 @@
                         <div class="form-text">{{ __('reference.authority_hint') }}</div>
                         @error('authority_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
+                    @endif
 
                     @foreach (['is_required', 'include_in_authority_file', 'is_active'] as $flag)
                         <div class="col-md-4 mb-3">

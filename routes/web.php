@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\BackupController;
 use App\Http\Controllers\Admin\BranchController;
 use App\Http\Controllers\Admin\BranchSwitchController;
+use App\Http\Controllers\Admin\ClientController;
 use App\Http\Controllers\Admin\CountryController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DocumentController;
@@ -15,6 +16,7 @@ use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\TravelStageController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\WorkerController;
 use App\Http\Controllers\Auth\ForcePasswordController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordResetController;
@@ -24,8 +26,10 @@ use App\Http\Controllers\Portal\AgencyPortalController;
 use App\Http\Controllers\Portal\DriverPortalController;
 use App\Models\AuditLog;
 use App\Models\Branch;
+use App\Models\Client;
 use App\Models\Role;
 use App\Models\User;
+use App\Models\Worker;
 use App\Services\BackupService;
 use App\Support\Reference\ReferenceRegistry;
 use Illuminate\Support\Facades\Route;
@@ -81,6 +85,26 @@ Route::middleware(['panel', 'user.type:internal'])->prefix('admin')->name('admin
     Route::put('profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
     Route::put('profile/language', [ProfileController::class, 'updateLanguage'])->name('profile.language');
     Route::put('profile/two-factor', [ProfileController::class, 'updateTwoFactor'])->name('profile.two-factor');
+
+    // Workers (BranchScope: another branch's worker is a 404)
+    Route::get('workers', [WorkerController::class, 'index'])->middleware('can:viewAny,'.Worker::class)->name('workers.index');
+    Route::get('workers/export', [WorkerController::class, 'export'])->middleware('can:export,'.Worker::class)->name('workers.export');
+    Route::get('workers/create', [WorkerController::class, 'create'])->middleware('can:create,'.Worker::class)->name('workers.create');
+    Route::post('workers', [WorkerController::class, 'store'])->middleware('can:create,'.Worker::class)->name('workers.store');
+    Route::get('workers/{worker}', [WorkerController::class, 'show'])->middleware('can:view,worker')->name('workers.show');
+    Route::get('workers/{worker}/photo', [WorkerController::class, 'photo'])->middleware('can:view,worker')->name('workers.photo');
+    Route::get('workers/{worker}/edit', [WorkerController::class, 'edit'])->middleware('can:update,worker')->name('workers.edit');
+    Route::put('workers/{worker}', [WorkerController::class, 'update'])->middleware('can:update,worker')->name('workers.update');
+    Route::post('workers/{worker}/status', [WorkerController::class, 'changeStatus'])->middleware('can:changeStatus,worker')->name('workers.status');
+
+    // Clients (BranchScope: another branch's client is a 404)
+    Route::get('clients', [ClientController::class, 'index'])->middleware('can:viewAny,'.Client::class)->name('clients.index');
+    Route::get('clients/export', [ClientController::class, 'export'])->middleware('can:export,'.Client::class)->name('clients.export');
+    Route::get('clients/create', [ClientController::class, 'create'])->middleware('can:create,'.Client::class)->name('clients.create');
+    Route::post('clients', [ClientController::class, 'store'])->middleware('can:create,'.Client::class)->name('clients.store');
+    Route::get('clients/{client}', [ClientController::class, 'show'])->middleware('can:view,client')->name('clients.show');
+    Route::get('clients/{client}/edit', [ClientController::class, 'edit'])->middleware('can:update,client')->name('clients.edit');
+    Route::put('clients/{client}', [ClientController::class, 'update'])->middleware('can:update,client')->name('clients.update');
 
     // Branches
     Route::get('branches', [BranchController::class, 'index'])->middleware('can:viewAny,'.Branch::class)->name('branches.index');

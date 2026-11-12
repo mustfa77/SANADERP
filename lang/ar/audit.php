@@ -40,6 +40,8 @@ return [
         'DocumentType' => 'نوع مستند',
         'Document' => 'مستند',
         'Candidate' => 'مرشحة',
+        'Worker' => 'عامل',
+        'Client' => 'عميل',
     ],
 
     /*
@@ -99,6 +101,15 @@ return [
             'activated' => 'تفعيل نوع مستند',
             'deactivated' => 'إيقاف نوع مستند',
             'deleted' => 'حذف نوع مستند',
+        ],
+        'worker' => [
+            'created' => 'إضافة عامل',
+            'updated' => 'تعديل عامل',
+            'status_changed' => 'تغيير حالة عامل',
+        ],
+        'client' => [
+            'created' => 'إضافة عميل',
+            'updated' => 'تعديل عميل',
         ],
         'document' => [
             'uploaded' => 'رفع مستند',
@@ -183,6 +194,15 @@ return [
             'activated' => 'تم تفعيل المستند ":name" (:country)',
             'deactivated' => 'تم إيقاف المستند ":name" (:country)',
             'deleted' => 'تم حذف المستند ":name" (:country)',
+        ],
+        'worker' => [
+            'created' => 'تمت إضافة العامل :name',
+            'updated' => 'تم تعديل بيانات العامل :name',
+            'status_changed' => 'تغيّرت حالة العامل :name من ":from" إلى ":to"',
+        ],
+        'client' => [
+            'created' => 'تمت إضافة العميل :name',
+            'updated' => 'تم تعديل بيانات العميل :name',
         ],
         'document' => [
             'uploaded' => 'تم رفع المستند ":name"',

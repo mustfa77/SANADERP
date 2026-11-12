@@ -29,6 +29,12 @@ return [
     'country_documents_hint' => 'Documents specific to this country, added to the global documents:',
     'global_document_types' => 'Global documents (all countries)',
     'global_document_types_hint' => 'Required from every candidate whatever the country, before the country-specific documents.',
+    'global_document_types_hint_worker' => 'Required from every worker whatever the country, before the country-specific documents.',
+    'global_document_types_hint_client' => 'Required from every client.',
+    'subjects' => [
+        'worker' => 'Workers',
+        'client' => 'Clients',
+    ],
     'no_document_types' => 'No documents defined.',
     'document_types_hint' => 'This order is the upload screen order and the printed authority file order. Deactivating a document hides it for new candidates only; uploaded files are kept.',
     'authority_hint' => 'Optional: link the document to one authority so it is only required for that authority\'s file.',
@@ -78,6 +84,7 @@ return [
         'is_required' => 'Required',
         'include_in_authority_file' => 'In authority file',
         'is_active' => 'Status',
+        'applies_to' => 'Required from',
     ],
 
     'camps' => [
@@ -100,6 +107,8 @@ return [
             'return_reason' => 'Return reasons',
             'cancel_reason' => 'Cancel reasons',
             'payment_method' => 'Payment methods',
+            'language' => 'Languages',
+            'skill' => 'Skills',
         ],
     ],
 

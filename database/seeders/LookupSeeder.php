@@ -26,6 +26,22 @@ class LookupSeeder extends Seeder
                 ['رفض التأشيرة', 'Visa rejected'],
                 ['عدم توفر عاملة', 'No worker available'],
             ],
+            LookupType::Language->value => [
+                ['العربية', 'Arabic'],
+                ['الإنجليزية', 'English'],
+                ['التاغالوغية', 'Tagalog'],
+                ['الإندونيسية', 'Indonesian'],
+                ['السواحيلية', 'Swahili'],
+                ['الأمهرية', 'Amharic'],
+            ],
+            LookupType::Skill->value => [
+                ['الطبخ', 'Cooking'],
+                ['التنظيف', 'Cleaning'],
+                ['رعاية الأطفال', 'Childcare'],
+                ['رعاية كبار السن', 'Elderly care'],
+                ['الكي والغسيل', 'Laundry & ironing'],
+                ['القيادة', 'Driving'],
+            ],
             LookupType::PaymentMethod->value => [
                 ['نقداً', 'Cash'],
                 ['مدى', 'Mada'],

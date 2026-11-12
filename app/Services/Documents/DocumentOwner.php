@@ -24,4 +24,9 @@ interface DocumentOwner
      * @return array{ar: ?string, en: ?string}|string
      */
     public function documentOwnerName(): array|string;
+
+    /**
+     * Which document types apply: "worker" or "client" (document_types.applies_to).
+     */
+    public function documentSubject(): string;
 }
